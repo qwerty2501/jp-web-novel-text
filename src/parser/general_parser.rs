@@ -44,7 +44,7 @@ where
 {
     fn parse(&mut self) -> Option<Phrase<&'a S, &'a Word<X>>> {
         if let Some(wc) = self.dictionary.get(self.text.iter_elements()) {
-            let (fragment, text) = self.text.take_split(wc.input_key().input_len());
+            let (fragment, text) = self.text.take_split(wc.input_key_len());
             self.text = text;
             Some(Phrase::new_dictionary_word(DictionaryPhrase::new(
                 fragment,

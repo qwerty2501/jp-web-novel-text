@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crawdad::Trie;
+use nom::AsBytes;
 
 use crate::{
     dictionary::Word,
@@ -36,23 +37,23 @@ where
     }
 }
 
-pub trait WordContainer<S, X>
-where
-    S: ?Sized,
-{
+pub trait WordContainer<S, X> {
     fn key(&self) -> &str;
-    fn input_key(&self) -> &S;
+    fn input_key_len(&self) -> usize;
     fn word(&self) -> &Word<X>;
 }
 
-impl<X> WordContainer<str, X> for Word<X> {
+impl<S, X> WordContainer<S, X> for Word<X>
+where
+    S: AsBytes,
+{
     fn key(&self) -> &str {
         self.key()
     }
     fn word(&self) -> &Word<X> {
         self
     }
-    fn input_key(&self) -> &str {
-        self.key()
+    fn input_key_len(&self) -> usize {
+        self.key().len()
     }
 }
