@@ -1,4 +1,4 @@
-use nom::{AsBytes, Input};
+use nom::Input;
 
 use crate::{
     DictionaryPhrase, Phrase, PlainPhrase,
@@ -6,7 +6,7 @@ use crate::{
     parser::{Result, parse_dictionary::DoubleArrayDictionary},
 };
 
-pub struct GeneralParser<WD>
+pub(crate) struct GeneralParser<WD>
 where
     WD: WordContainer,
 {
@@ -32,7 +32,7 @@ where
 {
     pub fn parse_iter<'a, S>(&'a self, text: &'a S) -> impl Iterator
     where
-        &'a S: Input<Item = char> + AsBytes + 'a,
+        &'a S: Input<Item = char> + 'a,
     {
         GeneralParseIter {
             text,

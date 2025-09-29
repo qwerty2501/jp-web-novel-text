@@ -1,9 +1,9 @@
 mod general_parser;
 mod parse_dictionary;
-use std::ops::Deref;
 
 use derive_new::new;
 pub use general_parser::*;
+use nom::{AsBytes, Input};
 use thiserror::Error;
 
 use crate::dictionary::Word;
@@ -23,10 +23,11 @@ impl<X> Parser<X> {
     }
 }
 
-impl<X> Deref for Parser<X> {
-    type Target = GeneralParser<Word<X>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl<X> Parser<X> {
+    pub fn parse_iter<'a, S>(&'a self, text: &'a S) -> impl Iterator
+    where
+        &'a S: Input<Item = char> + AsBytes + 'a,
+    {
+        self.0.parse_iter(text)
     }
 }
