@@ -9,30 +9,30 @@ use crate::{
     },
 };
 
-pub struct Parser<S, X, WD>
+pub struct GeneralParser<S, X, WD>
 where
     WD: WordContainer<S, X>,
 {
     dictionary: DoubleArrayDictionary<S, X, WD>,
 }
 
-impl<S, X, WD> Parser<S, X, WD>
+impl<S, X, WD> GeneralParser<S, X, WD>
 where
     WD: WordContainer<S, X>,
 {
     pub fn new_with_dic(words: Vec<WD>) -> Result<Self> {
-        Ok(Parser {
+        Ok(GeneralParser {
             dictionary: DoubleArrayDictionary::<S, X, WD>::new(words)?,
         })
     }
 }
-impl<'a, S, X, WD> Parser<S, X, WD>
+impl<'a, S, X, WD> GeneralParser<S, X, WD>
 where
     &'a S: Input<Item = char> + 'a,
     WD: WordContainer<S, X>,
 {
     pub fn parse_iter(&'a self, text: &'a S) -> impl Iterator {
-        ParseIter {
+        GeneralParseIter {
             text,
             dictionary: &self.dictionary,
             plain_cache: None,
@@ -41,7 +41,7 @@ where
     }
 }
 
-pub struct ParseIter<'a, S, X, WD>
+pub struct GeneralParseIter<'a, S, X, WD>
 where
     &'a S: Input<Item = char> + 'a,
     WD: WordContainer<S, X>,
@@ -52,7 +52,7 @@ where
     next_phrase: Option<Phrase<&'a S, &'a Word<X>>>,
 }
 
-impl<'a, S, X, WD> ParseIter<'a, S, X, WD>
+impl<'a, S, X, WD> GeneralParseIter<'a, S, X, WD>
 where
     &'a S: Input<Item = char>,
     WD: WordContainer<S, X>,
@@ -85,7 +85,7 @@ where
     }
 }
 
-impl<'a, S, X, WD> Iterator for ParseIter<'a, S, X, WD>
+impl<'a, S, X, WD> Iterator for GeneralParseIter<'a, S, X, WD>
 where
     &'a S: Input<Item = char>,
     WD: WordContainer<S, X>,
