@@ -32,6 +32,8 @@ where
             _s: PhantomData,
         })
     }
+
+    #[inline]
     pub fn get<I>(&self, key: I) -> Option<&WD>
     where
         I: IntoIterator<Item = char>,
