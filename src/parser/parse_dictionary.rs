@@ -8,7 +8,7 @@ use crate::{
     parser::{Error, Result},
 };
 
-pub struct Dictionary<S, X, WD>
+pub struct DoubleArrayDictionary<S, X, WD>
 where
     WD: WordContainer<S, X>,
 {
@@ -18,7 +18,7 @@ where
     _s: PhantomData<S>,
 }
 
-impl<S, X, WD> Dictionary<S, X, WD>
+impl<S, X, WD> DoubleArrayDictionary<S, X, WD>
 where
     WD: WordContainer<S, X>,
 {

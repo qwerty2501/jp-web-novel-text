@@ -5,7 +5,7 @@ use crate::{
     dictionary::Word,
     parser::{
         Result,
-        parse_dictionary::{Dictionary, WordContainer},
+        parse_dictionary::{DoubleArrayDictionary, WordContainer},
     },
 };
 
@@ -13,7 +13,7 @@ pub struct Parser<S, X, WD>
 where
     WD: WordContainer<S, X>,
 {
-    dictionary: Dictionary<S, X, WD>,
+    dictionary: DoubleArrayDictionary<S, X, WD>,
 }
 
 impl<S, X, WD> Parser<S, X, WD>
@@ -22,7 +22,7 @@ where
 {
     pub fn new(words: Vec<WD>) -> Result<Self> {
         Ok(Parser {
-            dictionary: Dictionary::<S, X, WD>::new(words)?,
+            dictionary: DoubleArrayDictionary::<S, X, WD>::new(words)?,
         })
     }
 }
@@ -45,7 +45,7 @@ where
     WD: WordContainer<S, X>,
 {
     text: &'a S,
-    dictionary: &'a Dictionary<S, X, WD>,
+    dictionary: &'a DoubleArrayDictionary<S, X, WD>,
 }
 
 impl<'a, S, X, WD> ParseIter<'a, S, X, WD>
