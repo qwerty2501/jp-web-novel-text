@@ -36,11 +36,11 @@ impl<X> Parser<X> {
 
 impl<'a, S, X> Iterator for ParseIter<'a, S, X>
 where
-    &'a S: Input,
+    &'a S: Input<Item = char>,
 {
     type Item = Phrase<&'a S, &'a Word<X>>;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(word) = self.dictionary.get(self.text) {
+        if let Some(word) = self.dictionary.get(self.text.iter_elements()) {
             let (fragment, text) = self.text.take_split(word.key().len());
             self.text = text;
             Some(Phrase::new_dictionary_word(DictionaryPhrase::new(
