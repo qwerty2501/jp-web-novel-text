@@ -1,7 +1,7 @@
+mod general_parser;
 mod parse_dictionary;
-mod parser;
 use derive_new::new;
-pub use parser::*;
+pub use general_parser::*;
 use thiserror::Error;
 
 #[derive(new, Error, Debug)]

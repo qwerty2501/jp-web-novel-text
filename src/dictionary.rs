@@ -10,12 +10,12 @@ pub struct Word<X = ()> {
 
 impl Word {
     pub fn new(key: String, ruby: String, description: String) -> Self {
-        Self::new_with_extra(key, ruby, description, ())
+        Self::new_extra(key, ruby, description, ())
     }
 }
 
 impl<X> Word<X> {
-    pub fn new_with_extra(key: String, ruby: String, description: String, extra: X) -> Self {
+    pub fn new_extra(key: String, ruby: String, description: String, extra: X) -> Self {
         Self {
             key,
             ruby,
