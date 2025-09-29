@@ -4,30 +4,30 @@ use derive_new::new;
 #[derive(new)]
 pub enum Phrase<S, DW> {
     Ruby(RubyPhrase<S>),
-    Dictionary(DictionaryPhrase<S, DW>),
+    DictionaryWord(DictionaryPhrase<S, DW>),
     NewLine(NewLinePhrase<S>),
     Plain(PlainPhrase<S>),
 }
 
 #[derive(Getters, new)]
 pub struct RubyPhrase<S> {
-    phrase: S,
+    fragment: S,
     target: S,
     ruby: S,
 }
 
 #[derive(Getters, new)]
 pub struct DictionaryPhrase<S, DW> {
-    phrase: S,
-    dictionary: DW,
+    fragment: S,
+    word: DW,
 }
 
 #[derive(Getters, new)]
 pub struct PlainPhrase<S> {
-    phrase: S,
+    fragment: S,
 }
 
 #[derive(Getters, new)]
 pub struct NewLinePhrase<S> {
-    phrase: S,
+    fragment: S,
 }

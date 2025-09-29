@@ -7,18 +7,18 @@ use crate::{
     parser::{Error, Result},
 };
 
-struct Dictionary {
+pub struct Dictionary {
     words: Vec<Word>,
     trie: Trie,
 }
 
 impl Dictionary {
-    fn new(dic: HashMap<String, Word>) -> Result<Self> {
-        let trie = Trie::from_keys(dic.keys()).map_err(Error::new_dictionary)?;
+    pub fn new(dic: HashMap<String, Word>) -> Result<Self> {
+        let trie = Trie::from_keys(dic.keys()).map_err(Error::new_create_dictionary)?;
         let words = dic.into_values().collect();
         Ok(Self { words, trie })
     }
-    fn get<I>(&self, key: I) -> Option<&Word>
+    pub fn get<I>(&self, key: I) -> Option<&Word>
     where
         I: IntoIterator<Item = char>,
     {

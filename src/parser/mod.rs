@@ -1,12 +1,12 @@
 mod parse_dictionary;
+mod parser;
 use derive_new::new;
+pub use parser::*;
+use thiserror::Error;
 
-use crate::{dictionary::Word, phrase::Phrase};
-
-pub type ParsedPhrase<'a, S> = Phrase<&'a S, &'a Word>;
-
-#[derive(new)]
+#[derive(new, Error, Debug)]
 pub enum Error {
-    Dictionary(crawdad::errors::CrawdadError),
+    #[error("辞書作成に失敗しました")]
+    CreateDictionary(crawdad::errors::CrawdadError),
 }
 pub type Result<T> = core::result::Result<T, Error>;
