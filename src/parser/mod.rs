@@ -10,3 +10,5 @@ pub enum Error {
     CreateDictionary(crawdad::errors::CrawdadError),
 }
 pub type Result<T> = core::result::Result<T, Error>;
+
+pub type Parser<X> = GeneralBytesParser<X>;

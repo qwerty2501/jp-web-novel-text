@@ -85,19 +85,31 @@ where
             self.next_phrase = None;
             Some(next)
         } else if let Some((phrase, next)) = self.parse_once() {
-            self.text = next;
             if let Some(plain) = self.plain_cache {
+                let plain = plain.take(self.text.input_len() - plain.input_len());
                 self.next_phrase = Some(phrase);
+                self.text = next;
+                self.plain_cache = None;
                 Some(Phrase::new_plain(PlainPhrase::new(plain)))
             } else {
+                self.text = next;
                 Some(phrase)
             }
         } else {
             if self.plain_cache.is_none() {
                 self.plain_cache = Some(self.text);
             }
-            self.text = self.text.take_from(1);
-            None
+            if self.text.input_len() == 0 {
+                if let Some(plain) = self.plain_cache {
+                    self.plain_cache = None;
+                    Some(Phrase::new_plain(PlainPhrase::new(plain)))
+                } else {
+                    None
+                }
+            } else {
+                self.text = self.text.take_from(1);
+                None
+            }
         }
     }
 }
