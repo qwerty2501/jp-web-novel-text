@@ -8,7 +8,10 @@ use crate::{
     parser::{Error, Result},
 };
 
-pub struct Dictionary<S, X, WD> {
+pub struct Dictionary<S, X, WD>
+where
+    WD: WordContainer<S, X>,
+{
     words: Vec<WD>,
     trie: Trie,
     _x: PhantomData<X>,

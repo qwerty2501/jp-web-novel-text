@@ -9,7 +9,10 @@ use crate::{
     },
 };
 
-pub struct Parser<S, X, WD> {
+pub struct Parser<S, X, WD>
+where
+    WD: WordContainer<S, X>,
+{
     dictionary: Dictionary<S, X, WD>,
 }
 
@@ -23,8 +26,12 @@ where
         })
     }
 }
-impl<S, X, WD> Parser<S, X, WD> {
-    pub fn parse_iter<'a>(&'a self, text: &'a S) -> ParseIter<'a, S, X, WD> {
+impl<'a, S, X, WD> Parser<S, X, WD>
+where
+    &'a S: Input<Item = char> + 'a,
+    WD: WordContainer<S, X>,
+{
+    pub fn parse_iter(&'a self, text: &'a S) -> impl Iterator {
         ParseIter {
             text,
             dictionary: &self.dictionary,
@@ -32,7 +39,11 @@ impl<S, X, WD> Parser<S, X, WD> {
     }
 }
 
-pub struct ParseIter<'a, S, X, WD> {
+pub struct ParseIter<'a, S, X, WD>
+where
+    &'a S: Input<Item = char> + 'a,
+    WD: WordContainer<S, X>,
+{
     text: &'a S,
     dictionary: &'a Dictionary<S, X, WD>,
 }
