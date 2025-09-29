@@ -1,24 +1,27 @@
 use crawdad::Trie;
 
-use crate::{
-    dictionary::Word,
-    parser::{Error, Result},
-};
+use crate::parser::{Error, Result, WordContainer};
 
-pub struct DoubleArrayDictionary<X> {
-    words: Vec<Word<X>>,
+pub struct DoubleArrayDictionary<WD>
+where
+    WD: WordContainer,
+{
+    words: Vec<WD>,
     trie: Trie,
 }
 
-impl<X> DoubleArrayDictionary<X> {
-    pub fn new(words: Vec<Word<X>>) -> Result<Self> {
-        let trie =
-            Trie::from_keys(words.iter().map(|w| w.key())).map_err(Error::new_create_dictionary)?;
+impl<WD> DoubleArrayDictionary<WD>
+where
+    WD: WordContainer,
+{
+    pub fn new(words: Vec<WD>) -> Result<Self> {
+        let trie = Trie::from_keys(words.iter().map(|w| w.word().key()))
+            .map_err(Error::new_create_dictionary)?;
         Ok(Self { words, trie })
     }
 
     #[inline]
-    pub fn get<I>(&self, key: I) -> Option<&Word<X>>
+    pub fn get<I>(&self, key: I) -> Option<&WD>
     where
         I: IntoIterator<Item = char>,
     {

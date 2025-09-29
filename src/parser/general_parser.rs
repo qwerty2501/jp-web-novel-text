@@ -6,24 +6,35 @@ use crate::{
     parser::{Result, parse_dictionary::DoubleArrayDictionary},
 };
 
-pub struct GeneralBytesParser<X> {
-    dictionary: DoubleArrayDictionary<X>,
+pub struct GeneralParser<WD>
+where
+    WD: WordContainer,
+{
+    dictionary: DoubleArrayDictionary<WD>,
 }
 
-impl<X> GeneralBytesParser<X> {
-    pub fn new_with_dic(words: impl Into<Vec<Word<X>>>) -> Result<Self> {
+pub(crate) struct GeneralParserGen;
+
+impl GeneralParserGen {
+    pub(crate) fn new_bytes_with_dic<X>(
+        words: impl Into<Vec<Word<X>>>,
+    ) -> Result<GeneralParser<Word<X>>> {
         let words = words.into();
-        Ok(GeneralBytesParser {
-            dictionary: DoubleArrayDictionary::<X>::new(words)?,
+        Ok(GeneralParser {
+            dictionary: DoubleArrayDictionary::<Word<X>>::new(words)?,
         })
     }
 }
-impl<X> GeneralBytesParser<X> {
+
+impl<WD> GeneralParser<WD>
+where
+    WD: WordContainer,
+{
     pub fn parse_iter<'a, S>(&'a self, text: &'a S) -> impl Iterator
     where
         &'a S: Input<Item = char> + AsBytes + 'a,
     {
-        GeneralBytesParseIter {
+        GeneralParseIter {
             text,
             dictionary: &self.dictionary,
             plain_cache: None,
@@ -32,27 +43,29 @@ impl<X> GeneralBytesParser<X> {
     }
 }
 
-pub struct GeneralBytesParseIter<'a, S, X>
+pub struct GeneralParseIter<'a, S, WD>
 where
     &'a S: Input<Item = char> + 'a,
+    WD: WordContainer,
 {
     text: &'a S,
-    dictionary: &'a DoubleArrayDictionary<X>,
+    dictionary: &'a DoubleArrayDictionary<WD>,
     plain_cache: Option<&'a S>,
-    next_phrase: Option<Phrase<&'a S, &'a Word<X>>>,
+    next_phrase: Option<Phrase<&'a S, &'a WD>>,
 }
 
-impl<'a, S, X> GeneralBytesParseIter<'a, S, X>
+impl<'a, S, WD> GeneralParseIter<'a, S, WD>
 where
     &'a S: Input<Item = char>,
+    WD: WordContainer,
 {
     #[inline]
-    fn parse_high_priority_once(&mut self) -> Option<(Phrase<&'a S, &'a Word<X>>, &'a S)> {
+    fn parse_high_priority_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
         unimplemented!()
     }
 
     #[inline]
-    fn parse_once(&mut self) -> Option<(Phrase<&'a S, &'a Word<X>>, &'a S)> {
+    fn parse_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
@@ -61,9 +74,9 @@ where
     }
 
     #[inline]
-    fn parse_dictionary_phrase_once(&mut self) -> Option<(Phrase<&'a S, &'a Word<X>>, &'a S)> {
+    fn parse_dictionary_phrase_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
         if let Some(word) = self.dictionary.get(self.text.iter_elements()) {
-            let (fragment, text) = self.text.take_split(word.key().len());
+            let (fragment, text) = self.text.take_split(word.input_len());
             Some((
                 Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
                 text,
@@ -74,11 +87,12 @@ where
     }
 }
 
-impl<'a, S, X> Iterator for GeneralBytesParseIter<'a, S, X>
+impl<'a, S, WD> Iterator for GeneralParseIter<'a, S, WD>
 where
     &'a S: Input<Item = char>,
+    WD: WordContainer,
 {
-    type Item = Phrase<&'a S, &'a Word<X>>;
+    type Item = Phrase<&'a S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(next) = &self.next_phrase {
             let next = next.clone();
@@ -111,5 +125,28 @@ where
                 None
             }
         }
+    }
+}
+
+pub trait CharacterSize {}
+
+pub struct ByteCharacterSize;
+impl CharacterSize for ByteCharacterSize {}
+
+pub trait WordContainer {
+    type Extra;
+    type CharacterSize: CharacterSize;
+    fn word(&self) -> &Word<Self::Extra>;
+    fn input_len(&self) -> usize;
+}
+
+impl<X> WordContainer for Word<X> {
+    type Extra = X;
+    type CharacterSize = ByteCharacterSize;
+    fn word(&self) -> &Word<X> {
+        self
+    }
+    fn input_len(&self) -> usize {
+        self.key().len()
     }
 }

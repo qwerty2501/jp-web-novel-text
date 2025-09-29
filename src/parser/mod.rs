@@ -1,8 +1,12 @@
 mod general_parser;
 mod parse_dictionary;
+use std::ops::Deref;
+
 use derive_new::new;
 pub use general_parser::*;
 use thiserror::Error;
+
+use crate::dictionary::Word;
 
 #[derive(new, Error, Debug)]
 pub enum Error {
@@ -11,4 +15,18 @@ pub enum Error {
 }
 pub type Result<T> = core::result::Result<T, Error>;
 
-pub type Parser<X> = GeneralBytesParser<X>;
+pub struct Parser<X>(GeneralParser<Word<X>>);
+
+impl<X> Parser<X> {
+    pub fn new_with_dic(words: impl Into<Vec<Word<X>>>) -> Result<Self> {
+        Ok(Self(GeneralParserGen::new_bytes_with_dic(words)?))
+    }
+}
+
+impl<X> Deref for Parser<X> {
+    type Target = GeneralParser<Word<X>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
