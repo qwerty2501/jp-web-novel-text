@@ -2,10 +2,9 @@ use nom::{Compare, IResult, Input, Parser, character::complete::line_ending, com
 
 use crate::{NewLinePhrase, Phrase};
 
-pub fn new_line<'a, S, DW>(input: &'a S) -> IResult<&'a S, Phrase<&'a S, &'a DW>>
+pub fn new_line<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
-    S: ?Sized,
-    &'a S: Input<Item = char> + Compare<&'static str> + 'a,
+    S: Input<Item = char> + Compare<&'static str> + 'a,
 {
     map(line_ending, |s| Phrase::new_new_line(NewLinePhrase::new(s))).parse(input)
 }
@@ -30,18 +29,6 @@ mod tests {
         Err(nom::Err::Error(error::Error::new("aaaa\n", error::ErrorKind::CrLf)))
     )]
     fn new_line_works(#[case] input: &str, #[case] expected: IResult<&str, Phrase<&str, &Word>>) {
-        let result = new_line::<_, Word>(input);
-        assert_that!(result.is_ok(), eq(expected.is_ok()));
-        if let Ok(r) = &result
-            && let Ok(e) = &expected
-        {
-            assert_that!(r, eq(e));
-        }
-
-        if let Err(nom::Err::Error(re)) = &result
-            && let Err(nom::Err::Error(ee)) = &expected
-        {
-            assert_that!(re, eq(ee));
-        }
+        assert_that!(new_line::<_, Word>(input), eq(&expected));
     }
 }

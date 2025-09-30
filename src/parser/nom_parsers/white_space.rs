@@ -1,0 +1,111 @@
+use nom::{Compare, IResult, Input, Parser, bytes::complete::take_while1, combinator::map};
+
+use crate::{
+    Phrase, WhiteSpace, WhiteSpaceType,
+    parser::nom_parsers::char::{is_space, is_tab, is_zenkaku_space},
+};
+pub fn space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+where
+    S: Input<Item = char> + Compare<&'static str> + 'a,
+{
+    map(take_while1(is_space), |s| {
+        Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::Space))
+    })
+    .parse(input)
+}
+
+pub fn zenkaku_space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+where
+    S: Input<Item = char> + Compare<&'static str> + 'a,
+{
+    map(take_while1(is_zenkaku_space), |s| {
+        Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::ZenkakuSpace))
+    })
+    .parse(input)
+}
+
+pub fn tab<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+where
+    S: Input<Item = char> + Compare<&'static str> + 'a,
+{
+    map(take_while1(is_tab), |s| {
+        Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::Tab))
+    })
+    .parse(input)
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::dictionary::Word;
+
+    use super::*;
+    use googletest::prelude::*;
+    use nom::error;
+    use rstest::*;
+
+    #[gtest]
+    #[rstest]
+    #[case::space2("  ", Ok(("", Phrase::new_white_space(WhiteSpace::new("  ",WhiteSpaceType::Space)))))]
+    #[case::space2_after_alpha("  aaa", Ok(("aaa", Phrase::new_white_space(WhiteSpace::new("  ",WhiteSpaceType::Space)))))]
+    #[case::space2_after_kana("  あいうえお", Ok(("あいうえお", Phrase::new_white_space(WhiteSpace::new("  ",WhiteSpaceType::Space)))))]
+    #[case::zenkaku_space(
+        "　　",
+        Err(nom::Err::Error(error::Error::new("　　", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::tab(
+        "\t\t",
+        Err(nom::Err::Error(error::Error::new("\t\t", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::space_before_alpha(
+        "aaa  ",
+        Err(nom::Err::Error(error::Error::new("aaa  ", error::ErrorKind::TakeWhile1)))
+    )]
+    fn space_works(#[case] input: &str, #[case] expected: IResult<&str, Phrase<&str, &Word>>) {
+        assert_that!(space::<_, Word>(input), eq(&expected));
+    }
+
+    #[gtest]
+    #[rstest]
+    #[case::zenkaku_space2("　　", Ok(("", Phrase::new_white_space(WhiteSpace::new("　　",WhiteSpaceType::ZenkakuSpace)))))]
+    #[case::zenkaku_space2_after_alpha("　　aaa", Ok(("aaa", Phrase::new_white_space(WhiteSpace::new("　　",WhiteSpaceType::ZenkakuSpace)))))]
+    #[case::zenkaku_space2_after_kana("　　あいうえお", Ok(("あいうえお", Phrase::new_white_space(WhiteSpace::new("　　",WhiteSpaceType::ZenkakuSpace)))))]
+    #[case::space(
+        "  ",
+        Err(nom::Err::Error(error::Error::new("  ", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::tab(
+        "\t\t",
+        Err(nom::Err::Error(error::Error::new("\t\t", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::space_before_alpha(
+        "aaa  ",
+        Err(nom::Err::Error(error::Error::new("aaa  ", error::ErrorKind::TakeWhile1)))
+    )]
+    fn zenkaku_space_works(
+        #[case] input: &str,
+        #[case] expected: IResult<&str, Phrase<&str, &Word>>,
+    ) {
+        assert_that!(zenkaku_space::<_, Word>(input), eq(&expected));
+    }
+
+    #[gtest]
+    #[rstest]
+    #[case::tab2("\t\t", Ok(("", Phrase::new_white_space(WhiteSpace::new("\t\t",WhiteSpaceType::Tab)))))]
+    #[case::tab2_after_alpha("\t\taaa", Ok(("aaa", Phrase::new_white_space(WhiteSpace::new("\t\t",WhiteSpaceType::Tab)))))]
+    #[case::tab2_after_kana("\t\tあいうえお", Ok(("あいうえお", Phrase::new_white_space(WhiteSpace::new("\t\t",WhiteSpaceType::Tab)))))]
+    #[case::zenkaku_space(
+        "　　",
+        Err(nom::Err::Error(error::Error::new("　　", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::space(
+        "  ",
+        Err(nom::Err::Error(error::Error::new("  ", error::ErrorKind::TakeWhile1)))
+    )]
+    #[case::space_before_alpha(
+        "aaa  ",
+        Err(nom::Err::Error(error::Error::new("aaa  ", error::ErrorKind::TakeWhile1)))
+    )]
+    fn tab_works(#[case] input: &str, #[case] expected: IResult<&str, Phrase<&str, &Word>>) {
+        assert_that!(tab::<_, Word>(input), eq(&expected));
+    }
+}
