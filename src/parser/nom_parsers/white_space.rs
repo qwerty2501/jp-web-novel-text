@@ -4,7 +4,7 @@ use crate::{
     Phrase, WhiteSpace, WhiteSpaceType,
     parser::nom_parsers::char::{is_space, is_tab, is_zenkaku_space},
 };
-pub fn space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+pub(crate) fn space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
     S: Input<Item = char> + Compare<&'static str> + 'a,
 {
@@ -14,7 +14,7 @@ where
     .parse(input)
 }
 
-pub fn zenkaku_space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+pub(crate) fn zenkaku_space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
     S: Input<Item = char> + Compare<&'static str> + 'a,
 {
@@ -24,7 +24,7 @@ where
     .parse(input)
 }
 
-pub fn tab<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+pub(crate) fn tab<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
     S: Input<Item = char> + Compare<&'static str> + 'a,
 {
