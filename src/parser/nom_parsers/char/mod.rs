@@ -21,6 +21,10 @@ pub(crate) const fn is_end_ruby(c: char) -> bool {
     c == ')' || c == '）' || c == '》' || c == '⟫'
 }
 
+pub(crate) const fn is_new_line_escape(c: char) -> bool {
+    c == '\r' || c == '\n'
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -111,5 +115,28 @@ mod tests {
     #[case('⟫', true)]
     fn is_end_ruby_works(#[case] c: char, #[case] expected: bool) {
         assert_that!(is_end_ruby(c), eq(expected))
+    }
+
+    #[gtest]
+    #[rstest]
+    #[case(' ', false)]
+    #[case('　', false)]
+    #[case('\t', false)]
+    #[case('a', false)]
+    #[case('あ', false)]
+    #[case('|', false)]
+    #[case('｜', false)]
+    #[case('(', false)]
+    #[case('（', false)]
+    #[case('《', false)]
+    #[case('⟪', false)]
+    #[case(')', false)]
+    #[case('）', false)]
+    #[case('》', false)]
+    #[case('⟫', false)]
+    #[case('\r', true)]
+    #[case('\n', true)]
+    fn is_new_line_escape_works(#[case] c: char, #[case] expected: bool) {
+        assert_that!(is_new_line_escape(c), eq(expected))
     }
 }
