@@ -60,12 +60,12 @@ where
     WD: WordContainer,
 {
     #[inline]
-    fn parse_high_priority_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
+    fn parse_high_priority_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
         unimplemented!()
     }
 
     #[inline]
-    fn parse_part_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
+    fn parse_part_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
@@ -78,7 +78,7 @@ where
             let next = next.clone();
             self.next_phrase = None;
             (Some(next), ParseStatus::Progress)
-        } else if let Some((phrase, next)) = self.parse_part_once() {
+        } else if let Some((next, phrase)) = self.parse_part_once() {
             if let Some(plain) = self.plain_cache {
                 let plain = plain.take(plain.input_len() - self.text.input_len());
                 self.next_phrase = Some(phrase);
@@ -114,12 +114,12 @@ where
     }
 
     #[inline]
-    fn parse_dictionary_phrase_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
+    fn parse_dictionary_phrase_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
         if let Some(word) = self.dictionary.get(self.text.iter_elements()) {
             let (fragment, text) = self.text.take_split(word.input_len());
             Some((
-                Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
                 text,
+                Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
             ))
         } else {
             None

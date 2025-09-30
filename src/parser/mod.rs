@@ -1,4 +1,5 @@
 mod general_parser;
+mod nom_parsers;
 mod parse_dictionary;
 
 use derive_new::new;
