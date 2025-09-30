@@ -65,11 +65,51 @@ where
     }
 
     #[inline]
-    fn parse_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
+    fn parse_part_once(&mut self) -> Option<(Phrase<&'a S, &'a WD>, &'a S)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
             self.parse_dictionary_phrase_once()
+        }
+    }
+    #[inline]
+    fn parse_once(&mut self) -> (Option<Phrase<&'a S, &'a WD>>, ParseStatus) {
+        if let Some(next) = &self.next_phrase {
+            let next = next.clone();
+            self.next_phrase = None;
+            (Some(next), ParseStatus::Progress)
+        } else if let Some((phrase, next)) = self.parse_part_once() {
+            if let Some(plain) = self.plain_cache {
+                let plain = plain.take(plain.input_len() - self.text.input_len());
+                self.next_phrase = Some(phrase);
+                self.text = next;
+                self.plain_cache = None;
+                (
+                    Some(Phrase::new_plain(PlainPhrase::new(plain))),
+                    ParseStatus::Progress,
+                )
+            } else {
+                self.text = next;
+                (Some(phrase), ParseStatus::Progress)
+            }
+        } else {
+            if self.plain_cache.is_none() {
+                self.plain_cache = Some(self.text);
+            }
+            if self.text.input_len() == 0 {
+                if let Some(plain) = self.plain_cache {
+                    self.plain_cache = None;
+                    (
+                        Some(Phrase::new_plain(PlainPhrase::new(plain))),
+                        ParseStatus::Progress,
+                    )
+                } else {
+                    (None, ParseStatus::End)
+                }
+            } else {
+                self.text = self.text.take_from(1);
+                (None, ParseStatus::Progress)
+            }
         }
     }
 
@@ -87,6 +127,12 @@ where
     }
 }
 
+#[derive(PartialEq)]
+enum ParseStatus {
+    Progress,
+    End,
+}
+
 impl<'a, S, WD> Iterator for GeneralParseIter<'a, S, WD>
 where
     &'a S: Input<Item = char>,
@@ -94,37 +140,14 @@ where
 {
     type Item = Phrase<&'a S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
-        if let Some(next) = &self.next_phrase {
-            let next = next.clone();
-            self.next_phrase = None;
-            Some(next)
-        } else if let Some((phrase, next)) = self.parse_once() {
-            if let Some(plain) = self.plain_cache {
-                let plain = plain.take(self.text.input_len() - plain.input_len());
-                self.next_phrase = Some(phrase);
-                self.text = next;
-                self.plain_cache = None;
-                Some(Phrase::new_plain(PlainPhrase::new(plain)))
-            } else {
-                self.text = next;
-                Some(phrase)
-            }
-        } else {
-            if self.plain_cache.is_none() {
-                self.plain_cache = Some(self.text);
-            }
-            if self.text.input_len() == 0 {
-                if let Some(plain) = self.plain_cache {
-                    self.plain_cache = None;
-                    Some(Phrase::new_plain(PlainPhrase::new(plain)))
-                } else {
-                    None
-                }
-            } else {
-                self.text = self.text.take_from(1);
-                None
+        while let (phrase, status) = self.parse_once()
+            && status == ParseStatus::Progress
+        {
+            if phrase.is_some() {
+                return phrase;
             }
         }
+        None
     }
 }
 
