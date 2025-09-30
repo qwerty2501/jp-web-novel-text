@@ -1,6 +1,6 @@
 use derive_getters::Getters;
 
-#[derive(Getters, Clone)]
+#[derive(Getters, Clone, PartialEq, Debug)]
 pub struct Word<X = ()> {
     key: String,
     ruby: String,
