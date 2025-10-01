@@ -7,6 +7,7 @@ edition = "2024"
 crawdad = "0.4.0"
 derive-getters = "0.5.0"
 derive-new = "0.7.0"
+kanji = "2.0.0"
 nom = "8.0.0"
 thiserror = "2.0.16"
 

@@ -3,7 +3,7 @@ use nom::Input;
 use crate::{
     DictionaryPhrase, Phrase, PlainPhrase,
     dictionary::Word,
-    parser::{Result, parse_dictionary::DoubleArrayDictionary},
+    parser::{ParsedFlagment, Result, parse_dictionary::DoubleArrayDictionary},
 };
 
 pub(crate) struct GeneralParser<WD>
@@ -51,7 +51,7 @@ where
     text: &'a S,
     dictionary: &'a DoubleArrayDictionary<WD>,
     plain_cache: Option<&'a S>,
-    next_phrase: Option<Phrase<&'a S, &'a WD>>,
+    next_phrase: Option<ParsedFlagment<&'a S, &'a WD>>,
 }
 
 impl<'a, S, WD> GeneralParseIter<'a, S, WD>
@@ -60,12 +60,12 @@ where
     WD: WordContainer,
 {
     #[inline]
-    fn parse_high_priority_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
+    fn parse_high_priority_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
         unimplemented!()
     }
 
     #[inline]
-    fn parse_part_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
+    fn parse_part_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
@@ -73,7 +73,7 @@ where
         }
     }
     #[inline]
-    fn parse_once(&mut self) -> (Option<Phrase<&'a S, &'a WD>>, ParseStatus) {
+    fn parse_once(&mut self) -> (Option<ParsedFlagment<&'a S, &'a WD>>, ParseStatus) {
         if let Some(next) = &self.next_phrase {
             let next = next.clone();
             self.next_phrase = None;
@@ -85,7 +85,10 @@ where
                 self.text = next;
                 self.plain_cache = None;
                 (
-                    Some(Phrase::new_plain(PlainPhrase::new(plain))),
+                    Some(ParsedFlagment::new(
+                        plain,
+                        Phrase::new_plain(PlainPhrase::new(plain)),
+                    )),
                     ParseStatus::Progress,
                 )
             } else {
@@ -100,7 +103,10 @@ where
                 if let Some(plain) = self.plain_cache {
                     self.plain_cache = None;
                     (
-                        Some(Phrase::new_plain(PlainPhrase::new(plain))),
+                        Some(ParsedFlagment::new(
+                            plain,
+                            Phrase::new_plain(PlainPhrase::new(plain)),
+                        )),
                         ParseStatus::Progress,
                     )
                 } else {
@@ -114,12 +120,15 @@ where
     }
 
     #[inline]
-    fn parse_dictionary_phrase_once(&mut self) -> Option<(&'a S, Phrase<&'a S, &'a WD>)> {
+    fn parse_dictionary_phrase_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
         if let Some(word) = self.dictionary.get(self.text.iter_elements()) {
             let (fragment, text) = self.text.take_split(word.input_len());
             Some((
                 text,
-                Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
+                ParsedFlagment::new(
+                    fragment,
+                    Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
+                ),
             ))
         } else {
             None
@@ -138,7 +147,7 @@ where
     &'a S: Input<Item = char>,
     WD: WordContainer,
 {
-    type Item = Phrase<&'a S, &'a WD>;
+    type Item = ParsedFlagment<&'a S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
         while let (phrase, status) = self.parse_once()
             && status == ParseStatus::Progress

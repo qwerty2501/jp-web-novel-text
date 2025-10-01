@@ -7,7 +7,7 @@ pub use general_parser::*;
 use nom::{AsBytes, Input};
 use thiserror::Error;
 
-use crate::dictionary::Word;
+use crate::{Phrase, dictionary::Word};
 
 #[derive(new, Error, Debug)]
 pub enum Error {
@@ -31,4 +31,11 @@ impl<X> Parser<X> {
     {
         self.0.parse_iter(text)
     }
+}
+
+#[derive(new, Clone, PartialEq, Debug)]
+#[new(visibility = "pub(crate)")]
+pub struct ParsedFlagment<S, DW> {
+    fragment: S,
+    phrase: Phrase<S, DW>,
 }

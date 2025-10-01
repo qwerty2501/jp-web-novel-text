@@ -6,7 +6,7 @@ pub enum Phrase<S, DW> {
     Ruby(RubyPhrase<S>),
     DictionaryWord(DictionaryPhrase<S, DW>),
     NewLine(NewLinePhrase<S>),
-    WhiteSpace(WhiteSpace<S>),
+    WhiteSpace(WhiteSpace),
     Plain(PlainPhrase<S>),
 }
 
@@ -18,7 +18,6 @@ pub enum RubyType {
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct RubyPhrase<S> {
-    fragment: S,
     target: S,
     ruby: S,
     ruby_type: RubyType,
@@ -26,18 +25,18 @@ pub struct RubyPhrase<S> {
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct DictionaryPhrase<S, DW> {
-    fragment: S,
+    target: S,
     word: DW,
 }
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct PlainPhrase<S> {
-    fragment: S,
+    target: S,
 }
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct NewLinePhrase<S> {
-    fragment: S,
+    target: S,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -48,7 +47,7 @@ pub enum WhiteSpaceType {
 }
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
-pub struct WhiteSpace<S> {
-    fragment: S,
+pub struct WhiteSpace {
+    count: usize,
     white_space_type: WhiteSpaceType,
 }

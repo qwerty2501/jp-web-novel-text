@@ -1,37 +1,78 @@
 use nom::{
     IResult, Input, Parser,
-    bytes::complete::{take_till1, take_while_m_n},
+    bytes::complete::{take_till1, take_while, take_while_m_n},
+    multi::many1_count,
+    sequence::{delimited, preceded},
 };
 
 use crate::{
     Phrase, RubyPhrase, RubyType,
-    parser::nom_parsers::char::{
-        is_end_ruby, is_new_line_escape, is_start_instruction, is_start_ruby,
+    parser::{
+        ParsedFlagment,
+        nom_parsers::char::{
+            is_end_ruby, is_ideographic_variation_sequence, is_kanji, is_new_line_escape,
+            is_start_instruction, is_start_ruby,
+        },
     },
 };
 
-pub(crate) fn ruby<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
+pub(crate) fn ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
 where
     S: Input<Item = char> + Copy,
 {
-    let (next, (_, target, _, ruby, _)) = (
-        take_while_m_n(1, 1, is_start_instruction),
-        take_till1(|c| is_start_ruby(c) || is_new_line_escape(c)),
-        take_while_m_n(1, 1, is_start_ruby),
-        take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
-        take_while_m_n(1, 1, is_end_ruby),
+    let (next, (target, ruby)) = (
+        preceded(
+            take_while_m_n(1, 1, is_start_instruction),
+            take_till1(|c| is_start_ruby(c) || is_new_line_escape(c)),
+        ),
+        delimited(
+            take_while_m_n(1, 1, is_start_ruby),
+            take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
+            take_while_m_n(1, 1, is_end_ruby),
+        ),
     )
         .parse(input)?;
     let fragment = input.take(input.input_len() - next.input_len());
     Ok((
         next,
-        Phrase::new_ruby(RubyPhrase::new(
+        ParsedFlagment::new(
             fragment,
-            target,
-            ruby,
-            RubyType::Instruction,
-        )),
+            Phrase::new_ruby(RubyPhrase::new(target, ruby, RubyType::Instruction)),
+        ),
     ))
+}
+
+pub(crate) fn kanji_ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
+where
+    S: Input<Item = char> + Copy,
+{
+    let (next_input, _) = many1_count(kanji).parse(input)?;
+    let kanji = input.take(input.input_len() - next_input.input_len());
+    let (r, ruby) = delimited(
+        take_while_m_n(1, 1, is_start_ruby),
+        take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
+        take_while_m_n(1, 1, is_end_ruby),
+    )
+    .parse(next_input)?;
+    Ok((
+        r,
+        ParsedFlagment::new(
+            input.take(input.input_len() - r.input_len()),
+            Phrase::new_ruby(RubyPhrase::new(kanji, ruby, RubyType::KanjiWithRuby)),
+        ),
+    ))
+}
+
+fn kanji<S>(input: S) -> IResult<S, S>
+where
+    S: Input<Item = char> + Copy,
+{
+    let (r, _) = (
+        take_while_m_n(1, 1, is_kanji),
+        take_while(is_ideographic_variation_sequence),
+    )
+        .parse(input)?;
+    Ok((r, input.take(input.input_len() - r.input_len())))
 }
 
 #[cfg(test)]
@@ -45,10 +86,10 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case("|玄人(くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと",RubyType::Instruction)))))]
-    #[case("|玄人《くろうと》",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと》","玄人","くろうと",RubyType::Instruction)))))]
-    #[case("|玄人《くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと)","玄人","くろうと",RubyType::Instruction)))))]
-    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと",RubyType::Instruction)))))]
+    #[case("|玄人(くろうと)",Ok(("", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《くろうと》",Ok(("", ParsedFlagment::new("|玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《くろうと)",Ok(("", ParsedFlagment::new("|玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
     #[case(
         "あいうえお|玄人(くろうと)",
         Err(nom::Err::Error(error::Error::new(
@@ -68,7 +109,10 @@ mod tests {
         "|玄人(くろ\nうと)",
         Err(nom::Err::Error(error::Error::new("\nうと)", error::ErrorKind::TakeWhileMN)))
     )]
-    fn ruby_works(#[case] input: &str, #[case] expected: IResult<&str, Phrase<&str, &Word>>) {
+    fn ruby_works(
+        #[case] input: &str,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+    ) {
         assert_that!(ruby(input), eq(&expected))
     }
 }

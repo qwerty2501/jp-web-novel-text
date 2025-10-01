@@ -25,6 +25,14 @@ pub(crate) const fn is_new_line_escape(c: char) -> bool {
     c == '\r' || c == '\n'
 }
 
+pub(crate) fn is_kanji(c: char) -> bool {
+    kanji::is_kanji(c)
+}
+
+pub(crate) const fn is_ideographic_variation_sequence(c: char) -> bool {
+    c >= '\u{E0100}' && c <= '\u{E01EF}'
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -138,5 +146,28 @@ mod tests {
     #[case('\n', true)]
     fn is_new_line_escape_works(#[case] c: char, #[case] expected: bool) {
         assert_that!(is_new_line_escape(c), eq(expected))
+    }
+    #[gtest]
+    #[rstest]
+    #[case(' ', false)]
+    #[case('　', false)]
+    #[case('\t', false)]
+    #[case('a', false)]
+    #[case('あ', false)]
+    #[case('|', false)]
+    #[case('｜', false)]
+    #[case('(', false)]
+    #[case('（', false)]
+    #[case('《', false)]
+    #[case('⟪', false)]
+    #[case(')', false)]
+    #[case('）', false)]
+    #[case('》', false)]
+    #[case('⟫', false)]
+    #[case('\r', false)]
+    #[case('\n', false)]
+    #[case('漢', true)]
+    fn is_kanji_works(#[case] c: char, #[case] expected: bool) {
+        assert_that!(is_kanji(c), eq(expected))
     }
 }
