@@ -5,7 +5,7 @@ use derive_new::new;
 pub enum Phrase<S, DW> {
     Ruby(RubyPhrase<S>),
     DictionaryWord(DictionaryPhrase<S, DW>),
-    NewLine(NewLinePhrase<S>),
+    NewLine(NewLinePhrase),
     WhiteSpace(WhiteSpace),
     Plain(PlainPhrase<S>),
 }
@@ -34,9 +34,15 @@ pub struct PlainPhrase<S> {
     target: S,
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum NewLineType {
+    Lf,
+    CrLf,
+}
+
 #[derive(Getters, new, Clone, PartialEq, Debug)]
-pub struct NewLinePhrase<S> {
-    target: S,
+pub struct NewLinePhrase {
+    new_line_type: NewLineType,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]

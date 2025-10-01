@@ -1,15 +1,29 @@
-use nom::{Compare, IResult, Input, Parser, character::complete::line_ending, combinator::map};
+use nom::{Compare, IResult, Input, Parser, bytes::complete::tag};
 
-use crate::{NewLinePhrase, Phrase, parser::ParsedFlagment};
+use crate::{NewLinePhrase, NewLineType, Phrase, parser::ParsedFlagment};
 
 pub fn new_line<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
 where
     S: Input<Item = char> + Compare<&'static str> + Copy,
 {
-    map(line_ending, |s| {
-        ParsedFlagment::new(s, Phrase::new_new_line(NewLinePhrase::new(s)))
-    })
-    .parse(input)
+    if let Ok((input, nl)) = tag::<_, S, nom::error::Error<_>>("\n").parse(input) {
+        Ok((
+            input,
+            ParsedFlagment::new(
+                nl,
+                Phrase::new_new_line(NewLinePhrase::new(NewLineType::Lf)),
+            ),
+        ))
+    } else {
+        let (input, nl) = tag("\r\n").parse(input)?;
+        Ok((
+            input,
+            ParsedFlagment::new(
+                nl,
+                Phrase::new_new_line(NewLinePhrase::new(NewLineType::CrLf)),
+            ),
+        ))
+    }
 }
 
 #[cfg(test)]
@@ -23,13 +37,13 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case::rn("\r\n", Ok(("", ParsedFlagment::new("\r\n", Phrase::new_new_line(NewLinePhrase::new("\r\n"))))))]
-    #[case::n("\n", Ok(("", ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new("\n"))))))]
-    #[case::n_with_alpha("\naaa", Ok(("aaa",ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new("\n"))))))]
-    #[case::n_with_kana("\nあいうえお", Ok(("あいうえお", ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new("\n"))))))]
+    #[case::rn("\r\n", Ok(("", ParsedFlagment::new("\r\n", Phrase::new_new_line(NewLinePhrase::new(NewLineType::CrLf))))))]
+    #[case::n("\n", Ok(("", ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new(NewLineType::Lf))))))]
+    #[case::n_with_alpha("\naaa", Ok(("aaa",ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new(NewLineType::Lf))))))]
+    #[case::n_with_kana("\nあいうえお", Ok(("あいうえお", ParsedFlagment::new("\n",Phrase::new_new_line(NewLinePhrase::new(NewLineType::Lf))))))]
     #[case::n_is_not_first(
         "aaaa\n",
-        Err(nom::Err::Error(error::Error::new("aaaa\n", error::ErrorKind::CrLf)))
+        Err(nom::Err::Error(error::Error::new("aaaa\n", error::ErrorKind::Tag)))
     )]
     fn new_line_works(
         #[case] input: &str,
