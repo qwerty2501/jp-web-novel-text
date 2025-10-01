@@ -51,7 +51,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::dictionary::Word;
+    use crate::dictionary::DictionaryWord;
 
     use super::*;
     use googletest::prelude::*;
@@ -77,9 +77,9 @@ mod tests {
     )]
     fn space_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        assert_that!(space::<_, Word>(input), eq(&expected));
+        assert_that!(space::<_, DictionaryWord>(input), eq(&expected));
     }
 
     #[gtest]
@@ -101,9 +101,9 @@ mod tests {
     )]
     fn zenkaku_space_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        assert_that!(zenkaku_space::<_, Word>(input), eq(&expected));
+        assert_that!(zenkaku_space::<_, DictionaryWord>(input), eq(&expected));
     }
 
     #[gtest]
@@ -125,8 +125,8 @@ mod tests {
     )]
     fn tab_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        assert_that!(tab::<_, Word>(input), eq(&expected));
+        assert_that!(tab::<_, DictionaryWord>(input), eq(&expected));
     }
 }

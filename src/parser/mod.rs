@@ -4,11 +4,11 @@ mod nom_parsers;
 mod parse_dictionary;
 
 use derive_new::new;
-pub use general_parser::*;
+use general_parser::*;
 use nom::{AsBytes, Compare, Input};
 use thiserror::Error;
 
-use crate::{Phrase, dictionary::Word, parser::context_parser::GeneralContextParser};
+use crate::{Phrase, dictionary::DictionaryWord, parser::context_parser::GeneralContextParser};
 
 #[derive(new, Error, Debug)]
 pub enum Error {
@@ -17,10 +17,10 @@ pub enum Error {
 }
 pub type Result<T> = core::result::Result<T, Error>;
 
-pub struct Parser<X>(GeneralParser<Word<X>>);
+pub struct Parser<X>(GeneralParser<DictionaryWord<X>>);
 
 impl<X> Parser<X> {
-    pub fn new_with_dic(words: impl Into<Vec<Word<X>>>) -> Result<Self> {
+    pub fn new_with_dic(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Self> {
         Ok(Self(GeneralParserGen::new_bytes_with_dic(words)?))
     }
 }
@@ -39,4 +39,11 @@ impl<X> Parser<X> {
 pub struct ParsedFlagment<S, DW> {
     fragment: S,
     phrase: Phrase<S, DW>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use googletest::prelude::*;
+    use rstest::*;
 }

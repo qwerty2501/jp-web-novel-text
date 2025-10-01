@@ -28,7 +28,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::dictionary::Word;
+    use crate::dictionary::DictionaryWord;
 
     use super::*;
     use googletest::prelude::*;
@@ -47,8 +47,8 @@ mod tests {
     )]
     fn new_line_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        assert_that!(new_line::<_, Word>(input), eq(&expected));
+        assert_that!(new_line::<_, DictionaryWord>(input), eq(&expected));
     }
 }

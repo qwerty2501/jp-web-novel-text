@@ -80,7 +80,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::dictionary::Word;
+    use crate::dictionary::DictionaryWord;
 
     use super::*;
     use googletest::prelude::*;
@@ -114,7 +114,7 @@ mod tests {
     )]
     fn ruby_instruction_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
         assert_that!(ruby_instruction(input), eq(&expected))
     }
@@ -149,7 +149,7 @@ mod tests {
     )]
     fn kanji_ruby_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
     ) {
         assert_that!(kanji_ruby(input), eq(&expected))
     }

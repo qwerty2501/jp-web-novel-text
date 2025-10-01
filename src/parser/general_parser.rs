@@ -4,7 +4,7 @@ use nom::{Compare, Input, Parser, branch::alt};
 
 use crate::{
     DictionaryPhrase, Phrase, PlainPhrase,
-    dictionary::Word,
+    dictionary::DictionaryWord,
     parser::{
         ParsedFlagment, Result,
         context_parser::ContextParser,
@@ -24,11 +24,11 @@ pub(crate) struct GeneralParserGen;
 
 impl GeneralParserGen {
     pub(crate) fn new_bytes_with_dic<X>(
-        words: impl Into<Vec<Word<X>>>,
-    ) -> Result<GeneralParser<Word<X>>> {
+        words: impl Into<Vec<DictionaryWord<X>>>,
+    ) -> Result<GeneralParser<DictionaryWord<X>>> {
         let words = words.into();
         Ok(GeneralParser {
-            dictionary: DoubleArrayDictionary::<Word<X>>::new(words)?,
+            dictionary: DoubleArrayDictionary::<DictionaryWord<X>>::new(words)?,
         })
     }
 }
@@ -183,14 +183,14 @@ impl CharacterSize for ByteCharacterSize {}
 pub trait WordContainer {
     type Extra;
     type CharacterSize: CharacterSize;
-    fn word(&self) -> &Word<Self::Extra>;
+    fn word(&self) -> &DictionaryWord<Self::Extra>;
     fn input_len(&self) -> usize;
 }
 
-impl<X> WordContainer for Word<X> {
+impl<X> WordContainer for DictionaryWord<X> {
     type Extra = X;
     type CharacterSize = ByteCharacterSize;
-    fn word(&self) -> &Word<X> {
+    fn word(&self) -> &DictionaryWord<X> {
         self
     }
     fn input_len(&self) -> usize {
