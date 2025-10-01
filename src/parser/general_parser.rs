@@ -113,25 +113,25 @@ where
                 (Some(phrase), ParseStatus::Progress)
             }
         } else {
-            if self.plain_cache.is_none() {
+            if self.plain_cache.is_none() && self.text.input_len() > 0 {
                 self.plain_cache = Some(self.text);
             }
-            if self.text.input_len() == 0 {
-                if let Some(plain) = self.plain_cache {
-                    self.plain_cache = None;
-                    (
-                        Some(ParsedFlagment::new(
-                            plain,
-                            Phrase::new_plain(PlainPhrase::new(plain)),
-                        )),
-                        ParseStatus::Progress,
-                    )
-                } else {
-                    (None, ParseStatus::End)
-                }
-            } else {
-                self.text = self.text.take_from(1);
+            let mut i = self.text.iter_indices();
+            i.next();
+            if let Some((next_index, _)) = i.next() {
+                self.text = self.text.take_from(next_index);
                 (None, ParseStatus::Progress)
+            } else if let Some(plain) = self.plain_cache {
+                self.plain_cache = None;
+                (
+                    Some(ParsedFlagment::new(
+                        plain,
+                        Phrase::new_plain(PlainPhrase::new(plain)),
+                    )),
+                    ParseStatus::Progress,
+                )
+            } else {
+                (None, ParseStatus::End)
             }
         }
     }

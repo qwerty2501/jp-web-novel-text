@@ -75,6 +75,10 @@ mod tests {
                 "|大砲(たいほう)",
                 Phrase::new_ruby(RubyPhrase::new("大砲", "たいほう", RubyType::Instruction)),
             ),
+            ParsedFlagment::new(
+                "\n",
+                Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
+            ),
         ]
     }
 
