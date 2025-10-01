@@ -2,7 +2,7 @@ use nom::{Compare, IResult, Input, Parser, bytes::complete::tag};
 
 use crate::{NewLinePhrase, NewLineType, Phrase, parser::ParsedFlagment};
 
-pub fn new_line<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
+pub(crate) fn new_line<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
 where
     S: Input<Item = char> + Compare<&'static str> + Copy,
 {

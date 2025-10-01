@@ -1,3 +1,4 @@
+mod context_parser;
 mod general_parser;
 mod nom_parsers;
 mod parse_dictionary;
@@ -7,7 +8,7 @@ pub use general_parser::*;
 use nom::{AsBytes, Compare, Input};
 use thiserror::Error;
 
-use crate::{Phrase, dictionary::Word};
+use crate::{Phrase, dictionary::Word, parser::context_parser::GeneralContextParser};
 
 #[derive(new, Error, Debug)]
 pub enum Error {
@@ -29,7 +30,7 @@ impl<X> Parser<X> {
     where
         S: Input<Item = char> + Copy + Compare<&'static str> + AsBytes,
     {
-        self.0.parse_iter(text)
+        self.0.parse_iter::<S, GeneralContextParser>(text)
     }
 }
 

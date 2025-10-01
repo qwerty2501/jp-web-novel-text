@@ -1,9 +1,16 @@
-use nom::{Compare, Input};
+use std::marker::PhantomData;
+
+use nom::{Compare, Input, Parser, branch::alt};
 
 use crate::{
     DictionaryPhrase, Phrase, PlainPhrase,
     dictionary::Word,
-    parser::{ParsedFlagment, Result, parse_dictionary::DoubleArrayDictionary},
+    parser::{
+        ParsedFlagment, Result,
+        context_parser::ContextParser,
+        nom_parsers::{new_line, space, tab, zenkaku_space},
+        parse_dictionary::DoubleArrayDictionary,
+    },
 };
 
 pub(crate) struct GeneralParser<WD>
@@ -30,38 +37,45 @@ impl<WD> GeneralParser<WD>
 where
     WD: WordContainer,
 {
-    pub fn parse_iter<S>(&self, text: S) -> impl Iterator
+    pub fn parse_iter<'a, S, CP>(&'a self, text: S) -> impl Iterator
     where
         S: Input<Item = char> + Copy + Compare<&'static str>,
+        CP: ContextParser<'a, S, WD>,
     {
         GeneralParseIter {
             text,
             dictionary: &self.dictionary,
             plain_cache: None,
             next_phrase: None,
+            _cp: PhantomData::<CP>,
         }
     }
 }
 
-pub struct GeneralParseIter<'a, S, WD>
+pub struct GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
+    CP: ContextParser<'a, S, WD>,
 {
     text: S,
     dictionary: &'a DoubleArrayDictionary<WD>,
     plain_cache: Option<S>,
     next_phrase: Option<ParsedFlagment<S, &'a WD>>,
+    _cp: PhantomData<CP>,
 }
 
-impl<'a, S, WD> GeneralParseIter<'a, S, WD>
+impl<'a, CP, S, WD> GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
+    CP: ContextParser<'a, S, WD>,
 {
     #[inline]
     fn parse_high_priority_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
-        unimplemented!()
+        alt((CP::parse, new_line, space, zenkaku_space, tab))
+            .parse(self.text)
+            .ok()
     }
 
     #[inline]
@@ -142,10 +156,11 @@ enum ParseStatus {
     End,
 }
 
-impl<'a, S, WD> Iterator for GeneralParseIter<'a, S, WD>
+impl<'a, CP, S, WD> Iterator for GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
+    CP: ContextParser<'a, S, WD>,
 {
     type Item = ParsedFlagment<S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
