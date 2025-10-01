@@ -10,11 +10,18 @@ pub enum Phrase<S, DW> {
     Plain(PlainPhrase<S>),
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum RubyType {
+    Instruction,
+    KanjiWithRuby,
+}
+
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct RubyPhrase<S> {
     fragment: S,
     target: S,
     ruby: S,
+    ruby_type: RubyType,
 }
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
@@ -33,7 +40,7 @@ pub struct NewLinePhrase<S> {
     fragment: S,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum WhiteSpaceType {
     Space,
     ZenkakuSpace,

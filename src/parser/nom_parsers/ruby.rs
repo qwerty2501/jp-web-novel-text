@@ -4,7 +4,7 @@ use nom::{
 };
 
 use crate::{
-    Phrase, RubyPhrase,
+    Phrase, RubyPhrase, RubyType,
     parser::nom_parsers::char::{
         is_end_ruby, is_new_line_escape, is_start_instruction, is_start_ruby,
     },
@@ -25,7 +25,12 @@ where
     let fragment = input.take(input.input_len() - next.input_len());
     Ok((
         next,
-        Phrase::new_ruby(RubyPhrase::new(fragment, target, ruby)),
+        Phrase::new_ruby(RubyPhrase::new(
+            fragment,
+            target,
+            ruby,
+            RubyType::Instruction,
+        )),
     ))
 }
 
@@ -40,10 +45,10 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case("|玄人(くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと")))))]
-    #[case("|玄人《くろうと》",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと》","玄人","くろうと")))))]
-    #[case("|玄人《くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと)","玄人","くろうと")))))]
-    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと")))))]
+    #[case("|玄人(くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと",RubyType::Instruction)))))]
+    #[case("|玄人《くろうと》",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと》","玄人","くろうと",RubyType::Instruction)))))]
+    #[case("|玄人《くろうと)",Ok(("", Phrase::new_ruby(RubyPhrase::new("|玄人《くろうと)","玄人","くろうと",RubyType::Instruction)))))]
+    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", Phrase::new_ruby(RubyPhrase::new("|玄人(くろうと)","玄人","くろうと",RubyType::Instruction)))))]
     #[case(
         "あいうえお|玄人(くろうと)",
         Err(nom::Err::Error(error::Error::new(
