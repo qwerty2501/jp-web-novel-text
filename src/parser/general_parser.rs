@@ -37,7 +37,10 @@ impl<WD> GeneralParser<WD>
 where
     WD: DictionaryWordContainer,
 {
-    pub fn parse_iter<'a, S, CP>(&'a self, text: S) -> impl Iterator
+    pub fn parse_iter<'a, S, CP>(
+        &'a self,
+        text: S,
+    ) -> impl Iterator<Item = ParsedFlagment<S, &'a WD>>
     where
         S: Input<Item = char> + Copy + Compare<&'static str>,
         CP: ContextParser<'a, S, WD>,

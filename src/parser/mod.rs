@@ -17,19 +17,22 @@ pub enum Error {
 }
 pub type Result<T> = core::result::Result<T, Error>;
 
-pub struct Parser<X>(GeneralParser<DictionaryWord<X>>);
+pub struct Parser<X = ()>(GeneralParser<DictionaryWord<X>>);
 
-impl<X> Parser<X> {
+impl Parser<()> {
     pub fn new() -> Result<Self> {
         Self::new_with_dic(vec![])
     }
-    pub fn new_with_dic(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Self> {
-        Ok(Self(GeneralParserGen::new_bytes_with_dic(words)?))
+    pub fn new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
+        Ok(Parser::<X>(GeneralParserGen::new_bytes_with_dic(words)?))
     }
 }
 
 impl<X> Parser<X> {
-    pub fn parse_iter<S>(&self, text: S) -> impl Iterator
+    pub fn parse_iter<S>(
+        &self,
+        text: S,
+    ) -> impl Iterator<Item = ParsedFlagment<S, &DictionaryWord<X>>>
     where
         S: Input<Item = char> + Copy + Compare<&'static str> + AsBytes,
     {
@@ -46,7 +49,8 @@ pub struct ParsedFlagment<S, DW> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{RubyPhrase, RubyType};
+
+    use crate::{NewLinePhrase, PlainPhrase, RubyPhrase, RubyType};
 
     use super::*;
     use googletest::prelude::*;
@@ -54,20 +58,34 @@ mod tests {
 
     #[fixture]
     fn words() -> Vec<DictionaryWord> {
-        let r = RubyPhrase::new("foo", "ruby", RubyType::Instruction);
-        let b: RubyPhrase<String> = r.to_permanent();
         vec![]
+    }
+
+    fn phrase_case1() -> Vec<ParsedFlagment<&'static str, &'static DictionaryWord>> {
+        vec![
+            ParsedFlagment::new(
+                "大砲を撃て",
+                Phrase::new_plain(PlainPhrase::new("大砲を撃て")),
+            ),
+            ParsedFlagment::new(
+                "\n",
+                Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
+            ),
+            ParsedFlagment::new(
+                "|大砲(たいほう)",
+                Phrase::new_ruby(RubyPhrase::new("大砲", "たいほう", RubyType::Instruction)),
+            ),
+        ]
     }
 
     #[rstest]
     #[gtest]
-    #[case()]
+    #[case(include_str!("test_data/parse_without_dic_works/case1.txt"), phrase_case1())]
     fn parse_without_dic_works(
         #[case] text: &str,
         #[case] expected: Vec<ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        let r = RubyPhrase::new("foo", "ruby", RubyType::Instruction);
-        let f: Vec<ParsedFlagment<&str, &DictionaryWord>> = vec![];
-        let ex = &f[0];
+        let parser = Parser::new().unwrap();
+        assert_that!(parser.parse_iter(text).collect::<Vec<_>>(), eq(&expected));
     }
 }
