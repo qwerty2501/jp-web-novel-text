@@ -43,5 +43,5 @@ pub enum WhiteSpaceType {
 #[derive(Getters, new, Clone, PartialEq, Debug)]
 pub struct WhiteSpace<S> {
     fragment: S,
-    space_type: WhiteSpaceType,
+    white_space_type: WhiteSpaceType,
 }
