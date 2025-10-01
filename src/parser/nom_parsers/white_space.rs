@@ -6,7 +6,7 @@ use crate::{
 };
 pub(crate) fn space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
-    S: Input<Item = char> + Compare<&'static str> + 'a,
+    S: Input<Item = char> + Compare<&'static str>,
 {
     map(take_while1(is_space), |s| {
         Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::Space))
@@ -16,7 +16,7 @@ where
 
 pub(crate) fn zenkaku_space<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
-    S: Input<Item = char> + Compare<&'static str> + 'a,
+    S: Input<Item = char> + Compare<&'static str>,
 {
     map(take_while1(is_zenkaku_space), |s| {
         Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::ZenkakuSpace))
@@ -26,7 +26,7 @@ where
 
 pub(crate) fn tab<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
-    S: Input<Item = char> + Compare<&'static str> + 'a,
+    S: Input<Item = char> + Compare<&'static str>,
 {
     map(take_while1(is_tab), |s| {
         Phrase::new_white_space(WhiteSpace::new(s, WhiteSpaceType::Tab))

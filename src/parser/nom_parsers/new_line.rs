@@ -4,7 +4,7 @@ use crate::{NewLinePhrase, Phrase};
 
 pub fn new_line<'a, S, DW>(input: S) -> IResult<S, Phrase<S, &'a DW>>
 where
-    S: Input<Item = char> + Compare<&'static str> + 'a,
+    S: Input<Item = char> + Compare<&'static str>,
 {
     map(line_ending, |s| Phrase::new_new_line(NewLinePhrase::new(s))).parse(input)
 }
