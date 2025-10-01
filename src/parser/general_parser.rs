@@ -15,7 +15,7 @@ use crate::{
 
 pub(crate) struct GeneralParser<WD>
 where
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
 {
     dictionary: DoubleArrayDictionary<WD>,
 }
@@ -35,7 +35,7 @@ impl GeneralParserGen {
 
 impl<WD> GeneralParser<WD>
 where
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
 {
     pub fn parse_iter<'a, S, CP>(&'a self, text: S) -> impl Iterator
     where
@@ -55,7 +55,7 @@ where
 pub struct GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
     CP: ContextParser<'a, S, WD>,
 {
     text: S,
@@ -68,7 +68,7 @@ where
 impl<'a, CP, S, WD> GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
     CP: ContextParser<'a, S, WD>,
 {
     #[inline]
@@ -159,7 +159,7 @@ enum ParseStatus {
 impl<'a, CP, S, WD> Iterator for GeneralParseIter<'a, CP, S, WD>
 where
     S: Input<Item = char> + Copy + Compare<&'static str>,
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
     CP: ContextParser<'a, S, WD>,
 {
     type Item = ParsedFlagment<S, &'a WD>;
@@ -180,14 +180,14 @@ pub trait CharacterSize {}
 pub struct ByteCharacterSize;
 impl CharacterSize for ByteCharacterSize {}
 
-pub trait WordContainer {
+pub trait DictionaryWordContainer {
     type Extra;
     type CharacterSize: CharacterSize;
     fn word(&self) -> &DictionaryWord<Self::Extra>;
     fn input_len(&self) -> usize;
 }
 
-impl<X> WordContainer for DictionaryWord<X> {
+impl<X> DictionaryWordContainer for DictionaryWord<X> {
     type Extra = X;
     type CharacterSize = ByteCharacterSize;
     fn word(&self) -> &DictionaryWord<X> {

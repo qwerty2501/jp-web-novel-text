@@ -20,6 +20,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub struct Parser<X>(GeneralParser<DictionaryWord<X>>);
 
 impl<X> Parser<X> {
+    pub fn new() -> Result<Self> {
+        Self::new_with_dic(vec![])
+    }
     pub fn new_with_dic(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Self> {
         Ok(Self(GeneralParserGen::new_bytes_with_dic(words)?))
     }
@@ -43,7 +46,28 @@ pub struct ParsedFlagment<S, DW> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{RubyPhrase, RubyType};
+
     use super::*;
     use googletest::prelude::*;
     use rstest::*;
+
+    #[fixture]
+    fn words() -> Vec<DictionaryWord> {
+        let r = RubyPhrase::new("foo", "ruby", RubyType::Instruction);
+        let b: RubyPhrase<String> = r.to_permanent();
+        vec![]
+    }
+
+    #[rstest]
+    #[gtest]
+    #[case()]
+    fn parse_without_dic_works(
+        #[case] text: &str,
+        #[case] expected: Vec<ParsedFlagment<&str, &DictionaryWord>>,
+    ) {
+        let r = RubyPhrase::new("foo", "ruby", RubyType::Instruction);
+        let f: Vec<ParsedFlagment<&str, &DictionaryWord>> = vec![];
+        let ex = &f[0];
+    }
 }

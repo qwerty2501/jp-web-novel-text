@@ -1,10 +1,10 @@
 use crawdad::Trie;
 
-use crate::parser::{Error, Result, WordContainer};
+use crate::parser::{DictionaryWordContainer, Error, Result};
 
 pub struct DoubleArrayDictionary<WD>
 where
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
 {
     words: Vec<WD>,
     trie: Trie,
@@ -12,7 +12,7 @@ where
 
 impl<WD> DoubleArrayDictionary<WD>
 where
-    WD: WordContainer,
+    WD: DictionaryWordContainer,
 {
     pub fn new(words: Vec<WD>) -> Result<Self> {
         let trie = Trie::from_keys(words.iter().map(|w| w.word().key()))
