@@ -1,4 +1,4 @@
-use nom::Input;
+use nom::{Compare, Input};
 
 use crate::{
     DictionaryPhrase, Phrase, PlainPhrase,
@@ -30,9 +30,9 @@ impl<WD> GeneralParser<WD>
 where
     WD: WordContainer,
 {
-    pub fn parse_iter<'a, S>(&'a self, text: &'a S) -> impl Iterator
+    pub fn parse_iter<S>(&self, text: S) -> impl Iterator
     where
-        &'a S: Input<Item = char> + 'a,
+        S: Input<Item = char> + Copy + Compare<&'static str>,
     {
         GeneralParseIter {
             text,
@@ -45,27 +45,27 @@ where
 
 pub struct GeneralParseIter<'a, S, WD>
 where
-    &'a S: Input<Item = char> + 'a,
+    S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
 {
-    text: &'a S,
+    text: S,
     dictionary: &'a DoubleArrayDictionary<WD>,
-    plain_cache: Option<&'a S>,
-    next_phrase: Option<ParsedFlagment<&'a S, &'a WD>>,
+    plain_cache: Option<S>,
+    next_phrase: Option<ParsedFlagment<S, &'a WD>>,
 }
 
 impl<'a, S, WD> GeneralParseIter<'a, S, WD>
 where
-    &'a S: Input<Item = char>,
+    S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
 {
     #[inline]
-    fn parse_high_priority_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
+    fn parse_high_priority_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
         unimplemented!()
     }
 
     #[inline]
-    fn parse_part_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
+    fn parse_part_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
@@ -73,7 +73,7 @@ where
         }
     }
     #[inline]
-    fn parse_once(&mut self) -> (Option<ParsedFlagment<&'a S, &'a WD>>, ParseStatus) {
+    fn parse_once(&mut self) -> (Option<ParsedFlagment<S, &'a WD>>, ParseStatus) {
         if let Some(next) = &self.next_phrase {
             let next = next.clone();
             self.next_phrase = None;
@@ -120,7 +120,7 @@ where
     }
 
     #[inline]
-    fn parse_dictionary_phrase_once(&mut self) -> Option<(&'a S, ParsedFlagment<&'a S, &'a WD>)> {
+    fn parse_dictionary_phrase_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
         if let Some(word) = self.dictionary.get(self.text.iter_elements()) {
             let (fragment, text) = self.text.take_split(word.input_len());
             Some((
@@ -144,10 +144,10 @@ enum ParseStatus {
 
 impl<'a, S, WD> Iterator for GeneralParseIter<'a, S, WD>
 where
-    &'a S: Input<Item = char>,
+    S: Input<Item = char> + Copy + Compare<&'static str>,
     WD: WordContainer,
 {
-    type Item = ParsedFlagment<&'a S, &'a WD>;
+    type Item = ParsedFlagment<S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
         while let (phrase, status) = self.parse_once()
             && status == ParseStatus::Progress

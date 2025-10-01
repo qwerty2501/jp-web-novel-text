@@ -4,7 +4,7 @@ mod parse_dictionary;
 
 use derive_new::new;
 pub use general_parser::*;
-use nom::{AsBytes, Input};
+use nom::{AsBytes, Compare, Input};
 use thiserror::Error;
 
 use crate::{Phrase, dictionary::Word};
@@ -25,9 +25,9 @@ impl<X> Parser<X> {
 }
 
 impl<X> Parser<X> {
-    pub fn parse_iter<'a, S>(&'a self, text: &'a S) -> impl Iterator
+    pub fn parse_iter<S>(&self, text: S) -> impl Iterator
     where
-        &'a S: Input<Item = char> + AsBytes + 'a,
+        S: Input<Item = char> + Copy + Compare<&'static str> + AsBytes,
     {
         self.0.parse_iter(text)
     }
