@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-pub(crate) fn ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
+pub(crate) fn ruby_instruction<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
 where
     S: Input<Item = char> + Copy,
 {
@@ -25,11 +25,7 @@ where
             take_while_m_n(1, 1, is_start_instruction),
             take_till1(|c| is_start_ruby(c) || is_new_line_escape(c)),
         ),
-        delimited(
-            take_while_m_n(1, 1, is_start_ruby),
-            take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
-            take_while_m_n(1, 1, is_end_ruby),
-        ),
+        ruby,
     )
         .parse(input)?;
     let fragment = input.take(input.input_len() - next.input_len());
@@ -42,18 +38,25 @@ where
     ))
 }
 
+fn ruby<S>(input: S) -> IResult<S, S>
+where
+    S: Input<Item = char> + Copy,
+{
+    delimited(
+        take_while_m_n(1, 1, is_start_ruby),
+        take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
+        take_while_m_n(1, 1, is_end_ruby),
+    )
+    .parse(input)
+}
+
 pub(crate) fn kanji_ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
 where
     S: Input<Item = char> + Copy,
 {
     let (next_input, _) = many1_count(kanji).parse(input)?;
     let kanji = input.take(input.input_len() - next_input.input_len());
-    let (r, ruby) = delimited(
-        take_while_m_n(1, 1, is_start_ruby),
-        take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
-        take_while_m_n(1, 1, is_end_ruby),
-    )
-    .parse(next_input)?;
+    let (r, ruby) = ruby.parse(next_input)?;
     Ok((
         r,
         ParsedFlagment::new(
@@ -109,10 +112,45 @@ mod tests {
         "|玄人(くろ\nうと)",
         Err(nom::Err::Error(error::Error::new("\nうと)", error::ErrorKind::TakeWhileMN)))
     )]
-    fn ruby_works(
+    fn ruby_instruction_works(
         #[case] input: &str,
         #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
     ) {
-        assert_that!(ruby(input), eq(&expected))
+        assert_that!(ruby_instruction(input), eq(&expected))
+    }
+
+    #[gtest]
+    #[rstest]
+    #[case("玄人(くろうと)",Ok(("", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《くろうと》",Ok(("", ParsedFlagment::new("玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《くろうと)",Ok(("", ParsedFlagment::new("玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case(
+        "あいうえお|玄人(くろうと)",
+        Err(nom::Err::Error(error::Error::new(
+            "あいうえお|玄人(くろうと)",
+            error::ErrorKind::Many1Count,
+        )))
+    )]
+    #[case(
+        "|玄人(くろうと)",
+        Err(nom::Err::Error(error::Error::new("|玄人(くろうと)", error::ErrorKind::Many1Count)))
+    )]
+    #[case(
+        "|玄人\n(くろうと)",
+        Err(nom::Err::Error(error::Error::new(
+            "|玄人\n(くろうと)",
+            error::ErrorKind::Many1Count
+        )))
+    )]
+    #[case(
+        "玄人(くろ\nうと)",
+        Err(nom::Err::Error(error::Error::new("\nうと)", error::ErrorKind::TakeWhileMN)))
+    )]
+    fn kanji_ruby_works(
+        #[case] input: &str,
+        #[case] expected: IResult<&str, ParsedFlagment<&str, &Word>>,
+    ) {
+        assert_that!(kanji_ruby(input), eq(&expected))
     }
 }
