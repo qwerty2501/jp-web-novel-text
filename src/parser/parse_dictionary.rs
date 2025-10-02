@@ -54,3 +54,33 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use crate::dictionary::DictionaryWord;
+
+    use super::*;
+    use googletest::prelude::*;
+    use rstest::*;
+
+    fn get_works_case1_words() -> Vec<DictionaryWord> {
+        vec![
+            DictionaryWord::new("炎".into(), "ほのお".into(), "火火".into()),
+            DictionaryWord::new("炎炎".into(), "えんえん".into(), "火火火火".into()),
+        ]
+    }
+    #[gtest]
+    #[rstest]
+    #[case("炎炎の炎", get_works_case1_words(), Some(DictionaryWord::new("炎炎".into(), "えんえん".into(), "火火火火".into())))]
+    #[case("水水の水", get_works_case1_words(), None)]
+    #[case("水炎炎の炎", get_works_case1_words(), None)]
+    fn get_works(
+        #[case] key: &str,
+        #[case] words: Vec<DictionaryWord>,
+        #[case] expected: Option<DictionaryWord>,
+    ) {
+        let dic = DoubleArrayDictionary::try_new(words).unwrap();
+        assert_that!(dic.get(key), eq(expected.as_ref()))
+    }
+}
