@@ -33,12 +33,22 @@ where
     where
         S: Input<Item = char>,
     {
-        if let Some(trie) = &self.trie {
-            if let Some((i, _)) = trie.common_prefix_search(key.iter_elements()).next() {
-                self.words.get(i as usize)
-            } else {
-                None
-            }
+        if let Some(trie) = &self.trie
+            && let Some((i, _)) =
+                trie.common_prefix_search(key.iter_elements())
+                    .fold(None, |b, (i, length)| {
+                        if let Some((bi, blength)) = b {
+                            if length > blength {
+                                Some((i, length))
+                            } else {
+                                Some((bi, blength))
+                            }
+                        } else {
+                            Some((i, length))
+                        }
+                    })
+        {
+            self.words.get(i as usize)
         } else {
             None
         }
