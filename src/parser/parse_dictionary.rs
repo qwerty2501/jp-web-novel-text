@@ -15,7 +15,7 @@ impl<WD> DoubleArrayDictionary<WD>
 where
     WD: DictionaryWordContainer,
 {
-    pub fn new(words: Vec<WD>) -> Result<Self> {
+    pub fn try_new(words: Vec<WD>) -> Result<Self> {
         if words.is_empty() {
             Ok(Self { words, trie: None })
         } else {

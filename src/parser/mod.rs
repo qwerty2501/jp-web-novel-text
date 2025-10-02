@@ -19,12 +19,17 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 pub struct Parser<X = ()>(GeneralParser<DictionaryWord<X>>);
 
-impl Parser<()> {
-    pub fn new() -> Result<Self> {
-        Self::new_with_dic(vec![])
+impl Default for Parser<()> {
+    fn default() -> Self {
+        Self::try_new_with_dic(vec![]).unwrap()
     }
-    pub fn new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
-        Ok(Parser::<X>(GeneralParserGen::new_bytes_with_dic(words)?))
+}
+
+impl Parser<()> {
+    pub fn try_new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
+        Ok(Parser::<X>(GeneralParserGen::try_new_bytes_with_dic(
+            words,
+        )?))
     }
 }
 
@@ -89,7 +94,7 @@ mod tests {
         #[case] text: &str,
         #[case] expected: Vec<ParsedFlagment<&str, &DictionaryWord>>,
     ) {
-        let parser = Parser::new().unwrap();
+        let parser = Parser::default();
         assert_that!(parser.parse_iter(text).collect::<Vec<_>>(), eq(&expected));
     }
 }
