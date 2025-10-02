@@ -6,7 +6,7 @@ pub enum Phrase<S, DW> {
     Ruby(RubyPhrase<S>),
     DictionaryWord(DictionaryPhrase<S, DW>),
     NewLine(NewLinePhrase),
-    WhiteSpace(WhiteSpace),
+    WhiteSpace(WhiteSpacePhrase),
     Plain(PlainPhrase<S>),
 }
 
@@ -53,7 +53,7 @@ pub enum WhiteSpaceType {
 }
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
-pub struct WhiteSpace {
+pub struct WhiteSpacePhrase {
     count: usize,
     white_space_type: WhiteSpaceType,
 }

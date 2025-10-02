@@ -1,7 +1,7 @@
 use nom::{Compare, IResult, Input, Parser, bytes::complete::take_while1, combinator::map};
 
 use crate::{
-    Phrase, WhiteSpace, WhiteSpaceType,
+    Phrase, WhiteSpacePhrase, WhiteSpaceType,
     parser::{
         ParsedFlagment,
         nom_parsers::char::{is_space, is_tab, is_zenkaku_space},
@@ -14,7 +14,7 @@ where
     map(take_while1(is_space), |s: S| {
         ParsedFlagment::new(
             s,
-            Phrase::new_white_space(WhiteSpace::new(s.input_len(), WhiteSpaceType::Space)),
+            Phrase::new_white_space(WhiteSpacePhrase::new(s.input_len(), WhiteSpaceType::Space)),
         )
     })
     .parse(input)
@@ -27,7 +27,7 @@ where
     map(take_while1(is_zenkaku_space), |s: S| {
         ParsedFlagment::new(
             s,
-            Phrase::new_white_space(WhiteSpace::new(
+            Phrase::new_white_space(WhiteSpacePhrase::new(
                 s.iter_elements().count(),
                 WhiteSpaceType::ZenkakuSpace,
             )),
@@ -43,7 +43,7 @@ where
     map(take_while1(is_tab), |s: S| {
         ParsedFlagment::new(
             s,
-            Phrase::new_white_space(WhiteSpace::new(s.input_len(), WhiteSpaceType::Tab)),
+            Phrase::new_white_space(WhiteSpacePhrase::new(s.input_len(), WhiteSpaceType::Tab)),
         )
     })
     .parse(input)
@@ -60,9 +60,9 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case::space2("  ", Ok(("", ParsedFlagment::new("  ", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Space))))))]
-    #[case::space2_after_alpha("  aaa", Ok(("aaa", ParsedFlagment::new("  ",Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Space))))))]
-    #[case::space2_after_kana("  あいうえお", Ok(("あいうえお", ParsedFlagment::new("  ",Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Space))))))]
+    #[case::space2("  ", Ok(("", ParsedFlagment::new("  ", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Space))))))]
+    #[case::space2_after_alpha("  aaa", Ok(("aaa", ParsedFlagment::new("  ",Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Space))))))]
+    #[case::space2_after_kana("  あいうえお", Ok(("あいうえお", ParsedFlagment::new("  ",Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Space))))))]
     #[case::zenkaku_space(
         "　　",
         Err(nom::Err::Error(error::Error::new("　　", error::ErrorKind::TakeWhile1)))
@@ -84,9 +84,9 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case::zenkaku_space2("　　", Ok(("", ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::ZenkakuSpace))))))]
-    #[case::zenkaku_space2_after_alpha("　　aaa", Ok(("aaa",ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::ZenkakuSpace))))))]
-    #[case::zenkaku_space2_after_kana("　　あいうえお", Ok(("あいうえお",ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::ZenkakuSpace))))))]
+    #[case::zenkaku_space2("　　", Ok(("", ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::ZenkakuSpace))))))]
+    #[case::zenkaku_space2_after_alpha("　　aaa", Ok(("aaa",ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::ZenkakuSpace))))))]
+    #[case::zenkaku_space2_after_kana("　　あいうえお", Ok(("あいうえお",ParsedFlagment::new("　　", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::ZenkakuSpace))))))]
     #[case::space(
         "  ",
         Err(nom::Err::Error(error::Error::new("  ", error::ErrorKind::TakeWhile1)))
@@ -108,9 +108,9 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case::tab2("\t\t", Ok(("", ParsedFlagment::new("\t\t",Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Tab))))))]
-    #[case::tab2_after_alpha("\t\taaa", Ok(("aaa",ParsedFlagment::new("\t\t", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Tab))))))]
-    #[case::tab2_after_kana("\t\tあいうえお", Ok(("あいうえお",ParsedFlagment::new("\t\t", Phrase::new_white_space(WhiteSpace::new(2,WhiteSpaceType::Tab))))))]
+    #[case::tab2("\t\t", Ok(("", ParsedFlagment::new("\t\t",Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Tab))))))]
+    #[case::tab2_after_alpha("\t\taaa", Ok(("aaa",ParsedFlagment::new("\t\t", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Tab))))))]
+    #[case::tab2_after_kana("\t\tあいうえお", Ok(("あいうえお",ParsedFlagment::new("\t\t", Phrase::new_white_space(WhiteSpacePhrase::new(2,WhiteSpaceType::Tab))))))]
     #[case::zenkaku_space(
         "　　",
         Err(nom::Err::Error(error::Error::new("　　", error::ErrorKind::TakeWhile1)))

@@ -3,6 +3,7 @@ mod general_parser;
 mod nom_parsers;
 mod parse_dictionary;
 
+use derive_getters::Getters;
 use derive_new::new;
 use general_parser::*;
 use nom::{AsBytes, Compare, Input};
@@ -45,7 +46,7 @@ impl<X> Parser<X> {
     }
 }
 
-#[derive(new, Clone, PartialEq, Debug)]
+#[derive(new, Getters, Clone, PartialEq, Debug)]
 #[new(visibility = "pub(crate)")]
 pub struct ParsedFlagment<S, DW> {
     fragment: S,
