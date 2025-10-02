@@ -1,6 +1,6 @@
 use nom::{
     IResult, Input, Parser,
-    bytes::complete::{take_till1, take_while, take_while_m_n},
+    bytes::complete::{take_till, take_till1, take_while, take_while_m_n},
     multi::many1_count,
     sequence::{delimited, preceded},
 };
@@ -44,7 +44,7 @@ where
 {
     delimited(
         take_while_m_n(1, 1, is_start_ruby),
-        take_till1(|c| is_end_ruby(c) || is_new_line_escape(c)),
+        take_till(|c| is_end_ruby(c) || is_new_line_escape(c)),
         take_while_m_n(1, 1, is_end_ruby),
     )
     .parse(input)
@@ -92,6 +92,7 @@ mod tests {
     #[case("|玄人(くろうと)",Ok(("", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
     #[case("|玄人《くろうと》",Ok(("", ParsedFlagment::new("|玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
     #[case("|玄人《くろうと)",Ok(("", ParsedFlagment::new("|玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《)",Ok(("", ParsedFlagment::new("|玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::Instruction))))))]
     #[case("|玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
     #[case(
         "あいうえお|玄人(くろうと)",
@@ -124,6 +125,7 @@ mod tests {
     #[case("玄人(くろうと)",Ok(("", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
     #[case("玄人《くろうと》",Ok(("", ParsedFlagment::new("玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
     #[case("玄人《くろうと)",Ok(("", ParsedFlagment::new("玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《)",Ok(("", ParsedFlagment::new("玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::KanjiWithRuby))))))]
     #[case("玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
     #[case(
         "あいうえお|玄人(くろうと)",
