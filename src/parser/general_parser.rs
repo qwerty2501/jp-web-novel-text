@@ -116,10 +116,8 @@ where
             if self.plain_cache.is_none() && self.text.input_len() > 0 {
                 self.plain_cache = Some(self.text);
             }
-            let mut i = self.text.iter_indices();
-            i.next();
-            if let Some((next_index, _)) = i.next() {
-                self.text = self.text.take_from(next_index);
+            if let Some(next_char) = self.text.iter_elements().next() {
+                self.text = self.text.take_from(next_char.len_utf8());
                 (None, ParseStatus::Progress)
             } else if let Some(plain) = self.plain_cache {
                 self.plain_cache = None;
