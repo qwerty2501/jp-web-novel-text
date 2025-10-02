@@ -4,12 +4,14 @@ use derive_getters::Getters;
 use derive_new::new;
 
 #[derive(Getters, new, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DictionaryWordRubySpecific {
     ruby: String,
     char_index: usize,
 }
 
 #[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum DictionaryWordRuby {
     All(String),
     Specifics(Vec<DictionaryWordRubySpecific>),
@@ -39,6 +41,7 @@ impl Display for DictionaryWordRuby {
 }
 
 #[derive(Getters, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DictionaryWord<X = ()> {
     key: String,
     ruby: DictionaryWordRuby,

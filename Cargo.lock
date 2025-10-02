@@ -328,6 +328,7 @@ dependencies = [
  "kanji",
  "nom",
  "rstest",
+ "serde",
  "thiserror",
 ]
 

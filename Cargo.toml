@@ -3,6 +3,10 @@ name = "jp-web-novel-text"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+serde = ["serde/derive"]
+default = []
+
 [dependencies]
 crawdad = "0.4.0"
 derive-getters = "0.5.0"
@@ -10,6 +14,8 @@ derive-new = "0.7.0"
 kanji = "2.0.0"
 nom = "8.0.0"
 thiserror = "2.0.16"
+serde = { version = "1.0.228" }
+
 
 [dev-dependencies]
 criterion = "0.7.0"
