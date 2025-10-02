@@ -153,4 +153,11 @@ mod tests {
     ) {
         assert_that!(kanji_ruby(input), eq(&expected))
     }
+
+    #[gtest]
+    #[rstest]
+    #[case("葛󠄀",Ok(("", "葛󠄀")))]
+    fn kanji_works(#[case] input: &str, #[case] expected: IResult<&str, &str>) {
+        assert_that!(kanji(input), eq(&expected))
+    }
 }
