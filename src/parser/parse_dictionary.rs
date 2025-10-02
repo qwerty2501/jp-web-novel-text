@@ -1,4 +1,5 @@
 use crawdad::Trie;
+use nom::Input;
 
 use crate::parser::{DictionaryWordContainer, Error, Result};
 
@@ -28,12 +29,13 @@ where
     }
 
     #[inline]
-    pub fn get<I>(&self, key: I) -> Option<&WD>
+    pub fn get<S>(&self, key: S) -> Option<&WD>
     where
-        I: IntoIterator<Item = char>,
+        S: Input<Item = char>,
     {
         if let Some(trie) = &self.trie {
-            self.words.get(trie.exact_match(key)? as usize)
+            self.words
+                .get(trie.exact_match(key.iter_elements())? as usize)
         } else {
             None
         }
