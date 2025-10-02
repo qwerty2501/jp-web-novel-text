@@ -25,7 +25,7 @@ impl Default for Parser<()> {
     }
 }
 
-impl Parser<()> {
+impl Parser {
     pub fn try_new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
         Ok(Parser::<X>(GeneralParserGen::try_new_bytes_with_dic(
             words,
