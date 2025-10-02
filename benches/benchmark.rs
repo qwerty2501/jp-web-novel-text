@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use jp_web_novel_text::{
-    DictionaryPhrase, DictionaryWord, NewLinePhrase, ParsedFlagment, Parser, Phrase, PlainPhrase,
-    RubyPhrase, WhiteSpacePhrase, WhiteSpaceType,
+    DictionaryPhrase, DictionaryWord, NewLinePhrase, Parser, Phrase, PlainPhrase, RubyPhrase,
+    WhiteSpacePhrase, WhiteSpaceType,
 };
 
 fn benchmark_words() -> Vec<DictionaryWord> {
@@ -26,7 +26,7 @@ fn benchmark_words() -> Vec<DictionaryWord> {
         for d in base.iter() {
             re.push(DictionaryWord::new(
                 d.key().to_string() + &i.to_string(),
-                d.ruby().to_owned(),
+                d.ruby().to_string(),
                 d.description().to_owned(),
             ));
         }
@@ -69,7 +69,7 @@ fn emit_dictionary_word(buf: &mut String, dw: &DictionaryPhrase<&str, &Dictionar
     buf.push_str("<ruby>");
     buf.push_str(dw.target());
     buf.push_str("<rp>(</rp><rt>");
-    buf.push_str(dw.word().ruby());
+    buf.push_str(dw.word().ruby().to_string().as_ref());
     buf.push_str("</rt><rp>)</rp>");
     buf.push_str("</ruby>");
 }

@@ -130,7 +130,7 @@ fn emit_dictionary_word(buf: &mut String, dw: &DictionaryPhrase<&str, &Dictionar
         buf.push_str("<ruby>");
         buf.push_str(dw.target());
         buf.push_str("<rp>(</rp><rt>");
-        buf.push_str(dw.word().ruby());
+        buf.push_str(dw.word().ruby().to_string().as_ref());
         buf.push_str("</rt><rp>)</rp>");
         buf.push_str("</ruby>");
     } else {
