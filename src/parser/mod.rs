@@ -55,7 +55,7 @@ pub struct ParsedFlagment<S, DW> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{NewLinePhrase, PlainPhrase, RubyPhrase, RubyType};
+    use crate::{DictionaryPhrase, NewLinePhrase, PlainPhrase, RubyPhrase, RubyType};
 
     use super::*;
     use googletest::prelude::*;
@@ -63,7 +63,11 @@ mod tests {
 
     #[fixture]
     fn words() -> Vec<DictionaryWord> {
-        vec![]
+        vec![DictionaryWord::new(
+            "大砲".into(),
+            "たいほう".into(),
+            "foo".into(),
+        )]
     }
 
     fn phrase_case1() -> Vec<ParsedFlagment<&'static str, &'static DictionaryWord>> {
@@ -96,5 +100,38 @@ mod tests {
     ) {
         let parser = Parser::default();
         assert_that!(parser.parse_iter(text).collect::<Vec<_>>(), eq(&expected));
+    }
+
+    #[gtest]
+    fn parse_with_dic() -> std::result::Result<(), Error> {
+        let text = include_str!("test_data/parse_with_dic/case1.txt");
+        let w = DictionaryWord::new("大砲".into(), "たいほう".into(), "foo".into());
+        let expected: Vec<ParsedFlagment<&str, &DictionaryWord>> = vec![
+            ParsedFlagment::new(
+                "大砲",
+                Phrase::new_dictionary_word(DictionaryPhrase::new("大砲", &w)),
+            ),
+            ParsedFlagment::new("を撃て", Phrase::new_plain(PlainPhrase::new("を撃て"))),
+            ParsedFlagment::new(
+                "\n",
+                Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
+            ),
+            ParsedFlagment::new(
+                "|大砲(たいほう)",
+                Phrase::new_ruby(RubyPhrase::new("大砲", "たいほう", RubyType::Instruction)),
+            ),
+            ParsedFlagment::new(
+                "\n",
+                Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
+            ),
+        ];
+        let dic_words = words();
+        let parser = Parser::try_new_with_dic(dic_words)?;
+
+        let actual = parser
+            .parse_iter(text)
+            .collect::<Vec<ParsedFlagment<&str, &DictionaryWord>>>();
+        assert_that!(actual, eq(&expected));
+        Ok(())
     }
 }

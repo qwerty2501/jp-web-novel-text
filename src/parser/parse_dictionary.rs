@@ -34,8 +34,11 @@ where
         S: Input<Item = char>,
     {
         if let Some(trie) = &self.trie {
-            self.words
-                .get(trie.exact_match(key.iter_elements())? as usize)
+            if let Some((i, _)) = trie.common_prefix_search(key.iter_elements()).next() {
+                self.words.get(i as usize)
+            } else {
+                None
+            }
         } else {
             None
         }

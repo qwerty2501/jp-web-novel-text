@@ -139,7 +139,7 @@ where
     #[inline]
     fn parse_dictionary_phrase_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
         if let Some(word) = self.dictionary.get(self.text) {
-            let (fragment, text) = self.text.take_split(word.input_len());
+            let (text, fragment) = self.text.take_split(word.input_len());
             Some((
                 text,
                 ParsedFlagment::new(
