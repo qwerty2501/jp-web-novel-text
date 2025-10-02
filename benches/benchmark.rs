@@ -45,6 +45,16 @@ fn parse_kokoro(c: &mut Criterion) {
     });
 }
 
+fn parse_kokoro_without_dictionary(c: &mut Criterion) {
+    let kokoro_body = include_str!("test_data/kokoro_utf8.txt");
+    c.bench_function("parse_kokoro_without_dictionary", |b| {
+        b.iter(|| {
+            let parser = Parser::default();
+            for _ in parser.parse_iter(kokoro_body) {}
+        });
+    });
+}
+
 fn parse_kokoro_and_gen_html(c: &mut Criterion) {
     let kokoro_body = include_str!("test_data/kokoro_utf8.txt");
     let words = benchmark_words();
@@ -104,5 +114,10 @@ fn emit_ruby(buf: &mut String, ruby: &RubyPhrase<&str>) {
     buf.push_str("</ruby>");
 }
 
-criterion_group!(benches, parse_kokoro, parse_kokoro_and_gen_html);
+criterion_group!(
+    benches,
+    parse_kokoro,
+    parse_kokoro_and_gen_html,
+    parse_kokoro_without_dictionary
+);
 criterion_main!(benches);
