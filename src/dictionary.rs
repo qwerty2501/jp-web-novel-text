@@ -37,15 +37,14 @@ impl DictionaryWord {
 
 impl<X> DictionaryWord<X> {
     pub fn new_all(phrase: Vec<DictionaryWordKeyPhrase>, description: String, extra: X) -> Self {
-        let mut key = String::new();
-        for rp in phrase.iter() {
-            match rp {
-                DictionaryWordKeyPhrase::Plain { target } => key.push_str(target),
-                DictionaryWordKeyPhrase::Ruby { target, ruby: _ } => key.push_str(target),
-            }
-        }
         Self {
-            key,
+            key: phrase
+                .iter()
+                .map(|rp| match rp {
+                    DictionaryWordKeyPhrase::Plain { target } => target.as_str(),
+                    DictionaryWordKeyPhrase::Ruby { target, ruby: _ } => target.as_str(),
+                })
+                .collect(),
             phrase,
             description,
             extra,
