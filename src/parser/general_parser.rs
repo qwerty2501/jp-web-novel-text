@@ -20,10 +20,16 @@ where
     dictionary: DoubleArrayDictionary<WD>,
 }
 
-pub(crate) struct GeneralParserGen;
+impl<X> Default for GeneralParser<DictionaryWord<X>> {
+    fn default() -> Self {
+        Self {
+            dictionary: DoubleArrayDictionary::default(),
+        }
+    }
+}
 
-impl GeneralParserGen {
-    pub(crate) fn try_new_bytes_with_dic<X>(
+impl<X> GeneralParser<DictionaryWord<X>> {
+    pub(crate) fn try_new_bytes_with_dic(
         words: impl Into<Vec<DictionaryWord<X>>>,
     ) -> Result<GeneralParser<DictionaryWord<X>>> {
         let words = words.into();

@@ -1,7 +1,7 @@
 mod context_parser;
 mod general_parser;
 mod nom_parsers;
-mod parse_dictionary;
+pub(crate) mod parse_dictionary;
 
 use derive_getters::Getters;
 use derive_new::new;
@@ -20,17 +20,17 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 pub struct Parser<X = ()>(GeneralParser<DictionaryWord<X>>);
 
-impl Default for Parser<()> {
+impl<X> Default for Parser<X> {
     fn default() -> Self {
-        Self::try_new_with_dic(vec![]).unwrap()
+        Self(GeneralParser::<DictionaryWord<X>>::default())
     }
 }
 
 impl Parser {
     pub fn try_new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
-        Ok(Parser::<X>(GeneralParserGen::try_new_bytes_with_dic(
-            words,
-        )?))
+        Ok(Parser::<X>(
+            GeneralParser::<DictionaryWord<X>>::try_new_bytes_with_dic(words)?,
+        ))
     }
 }
 

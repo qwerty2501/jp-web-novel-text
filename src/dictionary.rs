@@ -3,6 +3,8 @@ use derive_getters::Getters;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
+use crate::{Result, parse_dictionary::DoubleArrayDictionary};
+
 #[derive(Clone, new, PartialEq, Debug, Serialize, Deserialize)]
 pub enum DictionaryWordKeyPhrase {
     Plain { target: String },
@@ -46,5 +48,22 @@ impl<X> DictionaryWord<X> {
             description,
             extra,
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+pub struct PreparedDictionary<X: Clone = ()> {
+    format_version: String,
+    words: DictionaryWord<X>,
+    trie_vec: Vec<u8>,
+}
+
+impl<X: Clone> PreparedDictionary<X> {
+    pub(crate) fn format_version(&self) -> &str {
+        &self.format_version
+    }
+
+    pub fn prepare(words: Vec<DictionaryWord<X>>) -> Result<Self> {
+        let da_dic = DoubleArrayDictionary::try_new(words.clone())?;
     }
 }
