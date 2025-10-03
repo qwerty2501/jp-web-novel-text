@@ -1,65 +1,48 @@
-use std::fmt::Display;
-
 use derive_getters::Getters;
+
 use derive_new::new;
+use serde::{Deserialize, Serialize};
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct DictionaryWordRubySpecific {
-    ruby: String,
-    char_index: usize,
+#[derive(Clone, new, PartialEq, Debug, Serialize, Deserialize)]
+pub enum DictionaryWordKeyPhrase {
+    Plain { target: String },
+    Ruby { target: String, ruby: String },
 }
 
-#[derive(Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub enum DictionaryWordRuby {
-    All(String),
-    Specifics(Vec<DictionaryWordRubySpecific>),
-}
-
-impl DictionaryWordRuby {
-    pub fn is_empty(&self) -> bool {
-        match self {
-            Self::All(s) => s.is_empty(),
-            Self::Specifics(spec_rubys) => spec_rubys.is_empty(),
-        }
-    }
-}
-
-impl Display for DictionaryWordRuby {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::All(s) => f.write_str(s),
-            Self::Specifics(spec_rubys) => {
-                for s in spec_rubys.iter().map(|s| s.ruby().as_str()) {
-                    f.write_str(s)?;
-                }
-                Ok(())
-            }
-        }
-    }
-}
-
-#[derive(Getters, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Getters, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct DictionaryWord<X = ()> {
     key: String,
-    ruby: DictionaryWordRuby,
+    phrase: Vec<DictionaryWordKeyPhrase>,
     description: String,
     extra: X,
 }
 
 impl DictionaryWord {
     pub fn new(key: String, ruby: String, description: String) -> Self {
-        Self::new_extra(key, DictionaryWordRuby::All(ruby), description, ())
+        Self::new_all(
+            vec![if !ruby.is_empty() {
+                DictionaryWordKeyPhrase::new_ruby(key, ruby)
+            } else {
+                DictionaryWordKeyPhrase::new_plain(key)
+            }],
+            description,
+            (),
+        )
     }
 }
 
 impl<X> DictionaryWord<X> {
-    pub fn new_extra(key: String, ruby: DictionaryWordRuby, description: String, extra: X) -> Self {
+    pub fn new_all(phrase: Vec<DictionaryWordKeyPhrase>, description: String, extra: X) -> Self {
+        let mut key = String::new();
+        for rp in phrase.iter() {
+            match rp {
+                DictionaryWordKeyPhrase::Plain { target } => key.push_str(target),
+                DictionaryWordKeyPhrase::Ruby { target, ruby: _ } => key.push_str(target),
+            }
+        }
         Self {
             key,
-            ruby,
+            phrase,
             description,
             extra,
         }

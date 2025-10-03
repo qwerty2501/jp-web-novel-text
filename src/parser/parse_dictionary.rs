@@ -68,6 +68,7 @@ mod tests {
         vec![
             DictionaryWord::new("炎".into(), "ほのお".into(), "火火".into()),
             DictionaryWord::new("炎炎".into(), "えんえん".into(), "火火火火".into()),
+            DictionaryWord::new("延々".into(), "えんえん".into(), "えんえんえん".into()),
         ]
     }
     #[gtest]

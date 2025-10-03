@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use jp_web_novel_text::{
-    DictionaryPhrase, DictionaryWord, NewLinePhrase, Parser, Phrase, PlainPhrase, RubyPhrase,
-    WhiteSpacePhrase, WhiteSpaceType,
+    DictionaryPhrase, DictionaryWord, DictionaryWordKeyPhrase, NewLinePhrase, Parser, Phrase,
+    PlainPhrase, RubyPhrase, WhiteSpacePhrase, WhiteSpaceType,
 };
 
 fn benchmark_words() -> Vec<DictionaryWord> {
@@ -22,14 +22,10 @@ fn benchmark_words() -> Vec<DictionaryWord> {
         DictionaryWord::new("問答".into(), "ひしょかん".into(), "こ".into()),
     ];
     re.extend_from_slice(&base);
-    for i in 0..10 {
-        for d in base.iter() {
-            re.push(DictionaryWord::new(
-                d.key().to_string() + &i.to_string(),
-                d.ruby().to_string(),
-                d.description().to_owned(),
-            ));
-        }
+    for c in '\u{4E00}'..'\u{9FFF}' {
+        let mut key = c.to_string();
+        key.push(c);
+        re.push(DictionaryWord::new(key.to_owned(), key, "わ".into()));
     }
     re
 }
@@ -89,14 +85,28 @@ fn parse_kokoro_and_gen_html(c: &mut Criterion) {
         });
     });
 }
-
 fn emit_dictionary_word(buf: &mut String, dw: &DictionaryPhrase<&str, &DictionaryWord>) {
-    buf.push_str("<ruby>");
-    buf.push_str(dw.target());
-    buf.push_str("<rp>(</rp><rt>");
-    buf.push_str(dw.word().ruby().to_string().as_ref());
-    buf.push_str("</rt><rp>)</rp>");
-    buf.push_str("</ruby>");
+    buf.push_str("<span style=\"color:#0000FF\" class=\"c-tooltip\" data-tooltip=\"");
+    buf.push_str(dw.word().description());
+    buf.push_str("\">");
+    for r in dw.word().phrase().iter() {
+        match r {
+            DictionaryWordKeyPhrase::Plain { target } => {
+                buf.push_str("<span>");
+                buf.push_str(target);
+                buf.push_str("</span>");
+            }
+            DictionaryWordKeyPhrase::Ruby { target, ruby } => {
+                buf.push_str("<ruby>");
+                buf.push_str(target);
+                buf.push_str("<rp>(</rp><rt>");
+                buf.push_str(ruby);
+                buf.push_str("</rt><rp>)</rp>");
+                buf.push_str("</ruby>");
+            }
+        }
+    }
+    buf.push_str("</span>");
 }
 
 fn emit_space(buf: &mut String, phrase: &WhiteSpacePhrase) {

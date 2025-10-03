@@ -1,13 +1,16 @@
 use std::{env, fs::File, io::Write};
 
 use jp_web_novel_text::{
-    DictionaryPhrase, DictionaryWord, NewLinePhrase, Parser, Phrase, PlainPhrase, RubyPhrase,
-    WhiteSpacePhrase, WhiteSpaceType,
+    DictionaryPhrase, DictionaryWord, DictionaryWordKeyPhrase, NewLinePhrase, Parser, Phrase,
+    PlainPhrase, RubyPhrase, WhiteSpacePhrase, WhiteSpaceType,
 };
 
 fn words() -> Vec<DictionaryWord> {
     vec![
-        DictionaryWord::new("若々しい".into(), "".into(), "年齢のわりに若く見えること、また、活力や気力が衰えていないこと".into()),
+        DictionaryWord::new_all(vec![
+            DictionaryWordKeyPhrase::new_ruby("若々".into(),"わかわか".into()),
+            DictionaryWordKeyPhrase::new_plain("しい".into()),
+        ], "年齢のわりに若く見えること、また、活力や気力が衰えていないこと".into(),()),
         DictionaryWord::new("茶屋".into(), "ちゃや".into(), "製した茶を売る店。茶舗。".into()),
         DictionaryWord::new("自分".into(), "じぶん".into(), "その人自身。".into()),
         DictionaryWord::new("好奇心".into(), "こうきしん".into(), "新しいことや未知のこと、珍しい物事に対して強い興味や関心を持ち、それを知りたい、体験したいと思う心".into()),
@@ -126,15 +129,22 @@ fn emit_dictionary_word(buf: &mut String, dw: &DictionaryPhrase<&str, &Dictionar
     buf.push_str("<span style=\"color:#0000FF\" class=\"c-tooltip\" data-tooltip=\"");
     buf.push_str(dw.word().description());
     buf.push_str("\">");
-    if !dw.word().ruby().is_empty() {
-        buf.push_str("<ruby>");
-        buf.push_str(dw.target());
-        buf.push_str("<rp>(</rp><rt>");
-        buf.push_str(dw.word().ruby().to_string().as_ref());
-        buf.push_str("</rt><rp>)</rp>");
-        buf.push_str("</ruby>");
-    } else {
-        buf.push_str(dw.target());
+    for r in dw.word().phrase().iter() {
+        match r {
+            DictionaryWordKeyPhrase::Plain { target } => {
+                buf.push_str("<span>");
+                buf.push_str(target);
+                buf.push_str("</span>");
+            }
+            DictionaryWordKeyPhrase::Ruby { target, ruby } => {
+                buf.push_str("<ruby>");
+                buf.push_str(target);
+                buf.push_str("<rp>(</rp><rt>");
+                buf.push_str(ruby);
+                buf.push_str("</rt><rp>)</rp>");
+                buf.push_str("</ruby>");
+            }
+        }
     }
     buf.push_str("</span>");
 }
