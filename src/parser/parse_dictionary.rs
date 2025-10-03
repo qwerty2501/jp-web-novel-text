@@ -1,7 +1,10 @@
 use crawdad::Trie;
 use nom::Input;
 
-use crate::parser::{DictionaryWordContainer, Error, Result};
+use crate::{
+    PreparedDictionary,
+    parser::{DictionaryWordContainer, Error, Result},
+};
 
 pub struct DoubleArrayDictionary<WD>
 where
@@ -9,6 +12,36 @@ where
 {
     words: Vec<WD>,
     trie: Option<Trie>,
+}
+
+impl<WD> Default for DoubleArrayDictionary<WD>
+where
+    WD: DictionaryWordContainer,
+{
+    fn default() -> Self {
+        Self {
+            words: vec![],
+            trie: None,
+        }
+    }
+}
+
+impl<WD> TryFrom<PreparedDictionary<WD>> for DoubleArrayDictionary<WD>
+where
+    WD: Clone + DictionaryWordContainer,
+{
+    type Error = Error;
+    fn try_from(value: PreparedDictionary<WD>) -> std::result::Result<Self, Self::Error> {
+        if value.format_version() != PreparedDictionary::<WD>::CURRENT_FORMAT_VERSION {
+            Self::try_new(value.words)
+        } else {
+            let (trie, _) = Trie::deserialize_from_slice(&value.trie_vec);
+            Ok(Self {
+                words: value.words,
+                trie: Some(trie),
+            })
+        }
+    }
 }
 
 impl<WD> DoubleArrayDictionary<WD>
@@ -28,6 +61,10 @@ where
         }
     }
 
+    pub fn serialize(&self) -> Option<Vec<u8>> {
+        self.trie.as_ref().map(|trie| trie.serialize_to_vec())
+    }
+
     #[inline]
     pub fn get<S>(&self, key: S) -> Option<&WD>
     where
@@ -37,12 +74,10 @@ where
             && let Some((i, _)) =
                 trie.common_prefix_search(key.iter_elements())
                     .fold(None, |b, (i, length)| {
-                        if let Some((bi, blength)) = b {
-                            if length > blength {
-                                Some((i, length))
-                            } else {
-                                Some((bi, blength))
-                            }
+                        if let Some((bi, blength)) = b
+                            && length < blength
+                        {
+                            Some((bi, blength))
                         } else {
                             Some((i, length))
                         }

@@ -1,5 +1,5 @@
 mod context_parser;
-mod general_parser;
+pub(crate) mod general_parser;
 mod nom_parsers;
 pub(crate) mod parse_dictionary;
 
@@ -9,24 +9,42 @@ use general_parser::*;
 use nom::{AsBytes, Compare, Input};
 use thiserror::Error;
 
-use crate::{Phrase, dictionary::DictionaryWord, parser::context_parser::GeneralContextParser};
+use crate::{
+    Phrase, PreparedDictionary, dictionary::DictionaryWord,
+    parser::context_parser::GeneralContextParser,
+};
 
 #[derive(new, Error, Debug)]
 pub enum Error {
     #[error("辞書作成に失敗しました")]
     CreateDictionary(crawdad::errors::CrawdadError),
+
+    #[error("辞書シリアライズに失敗しました")]
+    SerializeDictionary,
 }
 pub type Result<T> = core::result::Result<T, Error>;
 
 pub struct Parser<X = ()>(GeneralParser<DictionaryWord<X>>);
 
-impl<X> Default for Parser<X> {
+impl Default for Parser<()> {
     fn default() -> Self {
-        Self(GeneralParser::<DictionaryWord<X>>::default())
+        Self(GeneralParser::<DictionaryWord<()>>::default())
     }
 }
 
-impl Parser {
+impl<X> TryFrom<PreparedDictionary<DictionaryWord<X>>> for Parser<X>
+where
+    X: Clone,
+{
+    type Error = Error;
+    fn try_from(
+        value: PreparedDictionary<DictionaryWord<X>>,
+    ) -> std::result::Result<Self, Self::Error> {
+        Ok(Self(GeneralParser::try_from(value)?))
+    }
+}
+
+impl Parser<()> {
     pub fn try_new_with_dic<X>(words: impl Into<Vec<DictionaryWord<X>>>) -> Result<Parser<X>> {
         Ok(Parser::<X>(
             GeneralParser::<DictionaryWord<X>>::try_new_bytes_with_dic(words)?,

@@ -1,5 +1,5 @@
 mod dictionary;
-pub mod parser;
+mod parser;
 mod phrase;
 
 pub use dictionary::*;

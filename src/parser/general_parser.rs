@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use nom::{Compare, Input, Parser, branch::alt};
 
 use crate::{
-    DictionaryPhrase, Phrase, PlainPhrase,
+    DictionaryPhrase, Error, Phrase, PlainPhrase, PreparedDictionary,
     dictionary::DictionaryWord,
     parser::{
         ParsedFlagment, Result,
@@ -25,6 +25,18 @@ impl<X> Default for GeneralParser<DictionaryWord<X>> {
         Self {
             dictionary: DoubleArrayDictionary::default(),
         }
+    }
+}
+
+impl<WD> TryFrom<PreparedDictionary<WD>> for GeneralParser<WD>
+where
+    WD: Clone + DictionaryWordContainer,
+{
+    type Error = Error;
+    fn try_from(value: PreparedDictionary<WD>) -> std::result::Result<Self, Self::Error> {
+        Ok(Self {
+            dictionary: DoubleArrayDictionary::try_from(value)?,
+        })
     }
 }
 

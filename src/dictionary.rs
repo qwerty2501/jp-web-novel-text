@@ -3,7 +3,9 @@ use derive_getters::Getters;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
-use crate::{Result, parse_dictionary::DoubleArrayDictionary};
+use crate::{
+    Error, Result, general_parser::DictionaryWordContainer, parse_dictionary::DoubleArrayDictionary,
+};
 
 #[derive(Clone, new, PartialEq, Debug, Serialize, Deserialize)]
 pub enum DictionaryWordKeyPhrase {
@@ -52,18 +54,31 @@ impl<X> DictionaryWord<X> {
 }
 
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
-pub struct PreparedDictionary<X: Clone = ()> {
+pub struct PreparedDictionary<WD>
+where
+    WD: Clone + DictionaryWordContainer,
+{
     format_version: String,
-    words: DictionaryWord<X>,
-    trie_vec: Vec<u8>,
+    pub(crate) words: Vec<WD>,
+    pub(crate) trie_vec: Vec<u8>,
 }
 
-impl<X: Clone> PreparedDictionary<X> {
+impl<WD> PreparedDictionary<WD>
+where
+    WD: Clone + DictionaryWordContainer,
+{
+    pub(crate) const CURRENT_FORMAT_VERSION: &str = "1.0.0";
     pub(crate) fn format_version(&self) -> &str {
         &self.format_version
     }
 
-    pub fn prepare(words: Vec<DictionaryWord<X>>) -> Result<Self> {
+    pub fn prepare(words: Vec<WD>) -> Result<Self> {
         let da_dic = DoubleArrayDictionary::try_new(words.clone())?;
+        let trie_vec = da_dic.serialize().ok_or(Error::SerializeDictionary)?;
+        Ok(Self {
+            format_version: Self::CURRENT_FORMAT_VERSION.into(),
+            words,
+            trie_vec,
+        })
     }
 }
