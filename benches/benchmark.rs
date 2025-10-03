@@ -45,6 +45,21 @@ fn parse_kokoro(c: &mut Criterion) {
     });
 }
 
+fn parse_kokoro_with_dic_but_bench_parse_only(c: &mut Criterion) {
+    let kokoro_body = include_str!("test_data/kokoro_utf8.txt");
+    let words = benchmark_words();
+    let parser = Parser::try_new_with_dic(words.clone()).unwrap();
+    c.bench_function("parse_kokoro_with_dic_but_bench_parse_only", |b| {
+        b.iter(|| for _ in parser.parse_iter(kokoro_body) {});
+    });
+}
+fn build_dictionary(c: &mut Criterion) {
+    let words = benchmark_words();
+    c.bench_function("build_dictionary", |b| {
+        b.iter(|| Parser::try_new_with_dic(words.clone()));
+    });
+}
+
 fn parse_kokoro_without_dictionary(c: &mut Criterion) {
     let kokoro_body = include_str!("test_data/kokoro_utf8.txt");
     c.bench_function("parse_kokoro_without_dictionary", |b| {
@@ -118,6 +133,8 @@ criterion_group!(
     benches,
     parse_kokoro,
     parse_kokoro_and_gen_html,
+    parse_kokoro_with_dic_but_bench_parse_only,
+    build_dictionary,
     parse_kokoro_without_dictionary
 );
 criterion_main!(benches);
