@@ -12,7 +12,7 @@ where
     S: Input<Item = char> + Copy + Compare<&'static str>,
 {
     #[inline]
-    fn parse(input: S) -> nom::IResult<S, crate::parser::ParsedFlagment<S, &'a WD>> {
+    fn parse(input: S) -> nom::IResult<S, crate::parser::ParsedFragment<S, &'a WD>> {
         alt((ruby_instruction, kanji_ruby)).parse(input)
     }
 }

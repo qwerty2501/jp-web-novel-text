@@ -8,7 +8,7 @@ use nom::{
 use crate::{
     Phrase, RubyPhrase, RubyType,
     parser::{
-        ParsedFlagment,
+        ParsedFragment,
         nom_parsers::char::{
             is_end_ruby, is_ideographic_variation_sequence, is_kanji, is_new_line_escape,
             is_start_instruction, is_start_ruby,
@@ -16,7 +16,7 @@ use crate::{
     },
 };
 
-pub(crate) fn ruby_instruction<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
+pub(crate) fn ruby_instruction<'a, S, DW>(input: S) -> IResult<S, ParsedFragment<S, &'a DW>>
 where
     S: Input<Item = char> + Copy,
 {
@@ -31,7 +31,7 @@ where
     let fragment = input.take(input.input_len() - next.input_len());
     Ok((
         next,
-        ParsedFlagment::new(
+        ParsedFragment::new(
             fragment,
             Phrase::new_ruby(RubyPhrase::new(target, ruby, RubyType::Instruction)),
         ),
@@ -50,7 +50,7 @@ where
     .parse(input)
 }
 
-pub(crate) fn kanji_ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFlagment<S, &'a DW>>
+pub(crate) fn kanji_ruby<'a, S, DW>(input: S) -> IResult<S, ParsedFragment<S, &'a DW>>
 where
     S: Input<Item = char> + Copy,
 {
@@ -59,7 +59,7 @@ where
     let (r, ruby) = ruby.parse(next_input)?;
     Ok((
         r,
-        ParsedFlagment::new(
+        ParsedFragment::new(
             input.take(input.input_len() - r.input_len()),
             Phrase::new_ruby(RubyPhrase::new(kanji, ruby, RubyType::KanjiWithRuby)),
         ),
@@ -89,11 +89,11 @@ mod tests {
 
     #[gtest]
     #[rstest]
-    #[case("|玄人(くろうと)",Ok(("", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
-    #[case("|玄人《くろうと》",Ok(("", ParsedFlagment::new("|玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
-    #[case("|玄人《くろうと)",Ok(("", ParsedFlagment::new("|玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
-    #[case("|玄人《)",Ok(("", ParsedFlagment::new("|玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::Instruction))))))]
-    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人(くろうと)",Ok(("", ParsedFragment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《くろうと》",Ok(("", ParsedFragment::new("|玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《くろうと)",Ok(("", ParsedFragment::new("|玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
+    #[case("|玄人《)",Ok(("", ParsedFragment::new("|玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::Instruction))))))]
+    #[case("|玄人(くろうと)ありうど",Ok(("ありうど", ParsedFragment::new("|玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::Instruction))))))]
     #[case(
         "あいうえお|玄人(くろうと)",
         Err(nom::Err::Error(error::Error::new(
@@ -115,18 +115,18 @@ mod tests {
     )]
     fn ruby_instruction_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
+        #[case] expected: IResult<&str, ParsedFragment<&str, &DictionaryWord>>,
     ) {
         assert_that!(ruby_instruction(input), eq(&expected))
     }
 
     #[gtest]
     #[rstest]
-    #[case("玄人(くろうと)",Ok(("", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
-    #[case("玄人《くろうと》",Ok(("", ParsedFlagment::new("玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
-    #[case("玄人《くろうと)",Ok(("", ParsedFlagment::new("玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
-    #[case("玄人《)",Ok(("", ParsedFlagment::new("玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::KanjiWithRuby))))))]
-    #[case("玄人(くろうと)ありうど",Ok(("ありうど", ParsedFlagment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人(くろうと)",Ok(("", ParsedFragment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《くろうと》",Ok(("", ParsedFragment::new("玄人《くろうと》",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《くろうと)",Ok(("", ParsedFragment::new("玄人《くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
+    #[case("玄人《)",Ok(("", ParsedFragment::new("玄人《)",Phrase::new_ruby(RubyPhrase::new("玄人","",RubyType::KanjiWithRuby))))))]
+    #[case("玄人(くろうと)ありうど",Ok(("ありうど", ParsedFragment::new("玄人(くろうと)",Phrase::new_ruby(RubyPhrase::new("玄人","くろうと",RubyType::KanjiWithRuby))))))]
     #[case(
         "あいうえお|玄人(くろうと)",
         Err(nom::Err::Error(error::Error::new(
@@ -151,7 +151,7 @@ mod tests {
     )]
     fn kanji_ruby_works(
         #[case] input: &str,
-        #[case] expected: IResult<&str, ParsedFlagment<&str, &DictionaryWord>>,
+        #[case] expected: IResult<&str, ParsedFragment<&str, &DictionaryWord>>,
     ) {
         assert_that!(kanji_ruby(input), eq(&expected))
     }

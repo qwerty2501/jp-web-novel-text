@@ -56,7 +56,7 @@ impl<X> Parser<X> {
     pub fn parse_iter<S>(
         &self,
         text: S,
-    ) -> impl Iterator<Item = ParsedFlagment<S, &DictionaryWord<X>>>
+    ) -> impl Iterator<Item = ParsedFragment<S, &DictionaryWord<X>>>
     where
         S: Input<Item = char> + Copy + Compare<&'static str> + AsBytes,
     {
@@ -66,7 +66,7 @@ impl<X> Parser<X> {
 
 #[derive(new, Getters, Clone, PartialEq, Debug)]
 #[new(visibility = "pub(crate)")]
-pub struct ParsedFlagment<S, DW> {
+pub struct ParsedFragment<S, DW> {
     fragment: S,
     phrase: Phrase<S, DW>,
 }
@@ -89,21 +89,21 @@ mod tests {
         )]
     }
 
-    fn phrase_case1() -> Vec<ParsedFlagment<&'static str, &'static DictionaryWord>> {
+    fn phrase_case1() -> Vec<ParsedFragment<&'static str, &'static DictionaryWord>> {
         vec![
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "大砲を撃て",
                 Phrase::new_plain(PlainPhrase::new("大砲を撃て")),
             ),
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "\n",
                 Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
             ),
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "|大砲(たいほう)",
                 Phrase::new_ruby(RubyPhrase::new("大砲", "たいほう", RubyType::Instruction)),
             ),
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "\n",
                 Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
             ),
@@ -115,7 +115,7 @@ mod tests {
     #[case(include_str!("test_data/parse_without_dic_works/case1.txt"), phrase_case1())]
     fn parse_without_dic_works(
         #[case] text: &str,
-        #[case] expected: Vec<ParsedFlagment<&str, &DictionaryWord>>,
+        #[case] expected: Vec<ParsedFragment<&str, &DictionaryWord>>,
     ) {
         let parser = Parser::default();
         assert_that!(parser.parse_iter(text).collect::<Vec<_>>(), eq(&expected));
@@ -125,21 +125,21 @@ mod tests {
     fn parse_with_dic() -> std::result::Result<(), Error> {
         let text = include_str!("test_data/parse_with_dic/case1.txt");
         let w = DictionaryWord::new("大砲".into(), "たいほう".into(), "foo".into());
-        let expected: Vec<ParsedFlagment<&str, &DictionaryWord>> = vec![
-            ParsedFlagment::new(
+        let expected: Vec<ParsedFragment<&str, &DictionaryWord>> = vec![
+            ParsedFragment::new(
                 "大砲",
                 Phrase::new_dictionary_word(DictionaryPhrase::new("大砲", &w)),
             ),
-            ParsedFlagment::new("を撃て", Phrase::new_plain(PlainPhrase::new("を撃て"))),
-            ParsedFlagment::new(
+            ParsedFragment::new("を撃て", Phrase::new_plain(PlainPhrase::new("を撃て"))),
+            ParsedFragment::new(
                 "\n",
                 Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
             ),
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "|大砲(たいほう)",
                 Phrase::new_ruby(RubyPhrase::new("大砲", "たいほう", RubyType::Instruction)),
             ),
-            ParsedFlagment::new(
+            ParsedFragment::new(
                 "\n",
                 Phrase::new_new_line(NewLinePhrase::new(crate::NewLineType::Lf)),
             ),
@@ -149,7 +149,7 @@ mod tests {
 
         let actual = parser
             .parse_iter(text)
-            .collect::<Vec<ParsedFlagment<&str, &DictionaryWord>>>();
+            .collect::<Vec<ParsedFragment<&str, &DictionaryWord>>>();
         assert_that!(actual, eq(&expected));
         Ok(())
     }

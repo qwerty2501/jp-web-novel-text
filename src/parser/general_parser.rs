@@ -6,7 +6,7 @@ use crate::{
     DictionaryPhrase, Error, Phrase, PlainPhrase, PreparedDictionary,
     dictionary::DictionaryWord,
     parser::{
-        ParsedFlagment, Result,
+        ParsedFragment, Result,
         context_parser::ContextParser,
         nom_parsers::{new_line, space, tab, zenkaku_space},
         parse_dictionary::DoubleArrayDictionary,
@@ -58,7 +58,7 @@ where
     pub fn parse_iter<'a, S, CP>(
         &'a self,
         text: S,
-    ) -> impl Iterator<Item = ParsedFlagment<S, &'a WD>>
+    ) -> impl Iterator<Item = ParsedFragment<S, &'a WD>>
     where
         S: Input<Item = char> + Copy + Compare<&'static str>,
         CP: ContextParser<'a, S, WD>,
@@ -82,7 +82,7 @@ where
     text: S,
     dictionary: &'a DoubleArrayDictionary<WD>,
     plain_cache: Option<S>,
-    next_phrase: Option<ParsedFlagment<S, &'a WD>>,
+    next_phrase: Option<ParsedFragment<S, &'a WD>>,
     _cp: PhantomData<CP>,
 }
 
@@ -93,14 +93,14 @@ where
     CP: ContextParser<'a, S, WD>,
 {
     #[inline]
-    fn parse_high_priority_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
+    fn parse_high_priority_once(&mut self) -> Option<(S, ParsedFragment<S, &'a WD>)> {
         alt((CP::parse, new_line, space, zenkaku_space, tab))
             .parse(self.text)
             .ok()
     }
 
     #[inline]
-    fn parse_part_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
+    fn parse_part_once(&mut self) -> Option<(S, ParsedFragment<S, &'a WD>)> {
         if let Some(r) = self.parse_high_priority_once() {
             Some(r)
         } else {
@@ -108,7 +108,7 @@ where
         }
     }
     #[inline]
-    fn parse_once(&mut self) -> (Option<ParsedFlagment<S, &'a WD>>, ParseStatus) {
+    fn parse_once(&mut self) -> (Option<ParsedFragment<S, &'a WD>>, ParseStatus) {
         if let Some(next) = &self.next_phrase {
             let next = next.clone();
             self.next_phrase = None;
@@ -120,7 +120,7 @@ where
                 self.text = next;
                 self.plain_cache = None;
                 (
-                    Some(ParsedFlagment::new(
+                    Some(ParsedFragment::new(
                         plain,
                         Phrase::new_plain(PlainPhrase::new(plain)),
                     )),
@@ -140,7 +140,7 @@ where
             } else if let Some(plain) = self.plain_cache {
                 self.plain_cache = None;
                 (
-                    Some(ParsedFlagment::new(
+                    Some(ParsedFragment::new(
                         plain,
                         Phrase::new_plain(PlainPhrase::new(plain)),
                     )),
@@ -153,12 +153,12 @@ where
     }
 
     #[inline]
-    fn parse_dictionary_phrase_once(&mut self) -> Option<(S, ParsedFlagment<S, &'a WD>)> {
+    fn parse_dictionary_phrase_once(&mut self) -> Option<(S, ParsedFragment<S, &'a WD>)> {
         if let Some(word) = self.dictionary.get(self.text) {
             let (text, fragment) = self.text.take_split(word.input_len());
             Some((
                 text,
-                ParsedFlagment::new(
+                ParsedFragment::new(
                     fragment,
                     Phrase::new_dictionary_word(DictionaryPhrase::new(fragment, word)),
                 ),
@@ -181,7 +181,7 @@ where
     WD: DictionaryWordContainer,
     CP: ContextParser<'a, S, WD>,
 {
-    type Item = ParsedFlagment<S, &'a WD>;
+    type Item = ParsedFragment<S, &'a WD>;
     fn next(&mut self) -> Option<Self::Item> {
         while let (phrase, status) = self.parse_once()
             && status == ParseStatus::Progress
