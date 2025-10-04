@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use jp_web_novel_text::{
     DictionaryPhrase, DictionaryWord, DictionaryWordKeyPhrase, NewLinePhrase, Parser, Phrase,
-    PlainPhrase, RubyPhrase, WhiteSpacePhrase, WhiteSpaceType,
+    PlainPhrase, PreparedDictionary, RubyPhrase, WhiteSpacePhrase, WhiteSpaceType,
 };
 
 fn benchmark_words() -> Vec<DictionaryWord> {
@@ -36,6 +36,18 @@ fn parse_kokoro(c: &mut Criterion) {
     c.bench_function("parse_kokoro", |b| {
         b.iter(|| {
             let parser = Parser::try_new_with_dic(words.clone()).unwrap();
+            for _ in parser.parse_iter(kokoro_body) {}
+        });
+    });
+}
+
+fn parse_kokoro_with_prepared_dictionary(c: &mut Criterion) {
+    let kokoro_body = include_str!("test_data/kokoro_utf8.txt");
+    let words = benchmark_words();
+    let pd = PreparedDictionary::prepare(words).unwrap();
+    c.bench_function("parse_kokoro_with_prepared_dictionary", |b| {
+        b.iter(|| {
+            let parser = Parser::try_from(pd.clone()).unwrap();
             for _ in parser.parse_iter(kokoro_body) {}
         });
     });
@@ -145,6 +157,7 @@ criterion_group!(
     parse_kokoro_and_gen_html,
     parse_kokoro_with_dic_but_bench_parse_only,
     build_dictionary,
+    parse_kokoro_with_prepared_dictionary,
     parse_kokoro_without_dictionary
 );
 criterion_main!(benches);
