@@ -2,10 +2,11 @@ use std::fmt::Display;
 
 use derive_getters::Getters;
 use derive_new::new;
+use serde::{Deserialize, Serialize};
 
 use crate::DictionaryWord;
 
-#[derive(new, Clone, PartialEq, Debug)]
+#[derive(new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum Phrase<S = String, DW = DictionaryWord> {
     Ruby(RubyPhrase<S>),
     DictionaryWord(DictionaryPhrase<S, DW>),
@@ -28,13 +29,13 @@ impl<S: Display, DW> Display for Phrase<S, DW> {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum RubyType {
     Instruction,
     KanjiWithRuby,
 }
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
+#[derive(Getters, new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct RubyPhrase<S> {
     target: S,
     ruby: S,
@@ -61,7 +62,7 @@ impl<S: Display> Display for RubyPhrase<S> {
     }
 }
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
+#[derive(Getters, new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct DictionaryPhrase<S, DW> {
     target: S,
     word: DW,
@@ -73,7 +74,7 @@ impl<S: Display, DW> Display for DictionaryPhrase<S, DW> {
     }
 }
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
+#[derive(Getters, new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct PlainPhrase<S> {
     target: S,
 }
@@ -84,13 +85,13 @@ impl<S: Display> Display for PlainPhrase<S> {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum NewLineType {
     Lf,
     CrLf,
 }
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
+#[derive(Getters, new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct NewLinePhrase {
     new_line_type: NewLineType,
 }
@@ -103,14 +104,14 @@ impl Display for NewLinePhrase {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub enum WhiteSpaceType {
     Space,
     ZenkakuSpace,
     Tab,
 }
 
-#[derive(Getters, new, Clone, PartialEq, Debug)]
+#[derive(Getters, new, Clone, PartialEq, Debug, Serialize, Deserialize)]
 pub struct WhiteSpacePhrase {
     count: usize,
     white_space_type: WhiteSpaceType,
