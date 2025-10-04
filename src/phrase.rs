@@ -4,14 +4,18 @@ use derive_getters::Getters;
 use derive_new::new;
 use serde::{Deserialize, Serialize};
 
+use crate::DictionaryWord;
+
 #[derive(new, Clone, PartialEq, Debug, Serialize, Deserialize)]
-pub enum Phrase<S, DW> {
+pub enum Phrase<S = String, DW = DictionaryWord> {
     Ruby(RubyPhrase<S>),
     DictionaryWord(DictionaryPhrase<S, DW>),
     NewLine(NewLinePhrase),
     WhiteSpace(WhiteSpacePhrase),
     Plain(PlainPhrase<S>),
 }
+
+pub type PhraseRef<'a, S = str, DW = DictionaryWord> = Phrase<&'a S, &'a DW>;
 
 impl<S: Display, DW> Display for Phrase<S, DW> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -115,11 +119,15 @@ pub struct WhiteSpacePhrase {
 
 impl Display for WhiteSpacePhrase {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.white_space_type {
-            WhiteSpaceType::Space => f.write_str(&" ".repeat(self.count)),
-            WhiteSpaceType::Tab => f.write_str(&"\t".repeat(self.count)),
-            WhiteSpaceType::ZenkakuSpace => f.write_str(&"　".repeat(self.count)),
+        let s = match self.white_space_type {
+            WhiteSpaceType::Space => " ",
+            WhiteSpaceType::Tab => "\t",
+            WhiteSpaceType::ZenkakuSpace => "　",
+        };
+        for _ in 0..self.count {
+            f.write_str(s)?;
         }
+        Ok(())
     }
 }
 
